@@ -79,6 +79,7 @@ export const AuthProvider = ({children}: Props) => {
     setToken('');
     setIsLoggedIn(false);
     setLoginType(undefined);
+    setuserDetails(undefined)
   };
 
   return (

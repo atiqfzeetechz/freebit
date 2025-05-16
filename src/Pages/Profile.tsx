@@ -7,15 +7,18 @@ import { useIsFocused, useNavigation } from '@react-navigation/native'
 import { Button, Icon, IconButton, MD3Colors } from 'react-native-paper'
 import { useAuth } from '../hooks/useAuth'
 import { wp } from '../helper/hpwp'
+import { useWebView } from '../context/WebviewContext'
 
 export default function Profile() {
   const navigation = useNavigation()
   const isFocused=  useIsFocused()
 const  {logout} =useAuth()
+  const { triggerLogout } = useWebView();
 
 const handleLogout =()=>{
-  logout()
-  navigation.navigate('Home')
+      triggerLogout();
+  // logout()
+  // navigation.navigate('Home')
 }
   
   useEffect(()=>{ 

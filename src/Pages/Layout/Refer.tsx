@@ -2,30 +2,27 @@ import { StyleSheet, View, ScrollView, Linking, FlatList, Share } from 'react-na
 import React, { useEffect, useState } from 'react';
 import useAxios from '../../hooks/useAxios';
 import { useIsFocused } from '@react-navigation/native';
-import { Card, Title, Paragraph, Button, Text, useTheme, Snackbar, List } from 'react-native-paper';
+import { Card, Title, Paragraph, Button, Text, useTheme, Snackbar, List, Avatar } from 'react-native-paper';
 import Clipboard from '@react-native-clipboard/clipboard';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { useAuth } from '../../hooks/useAuth';
 
 export default function Refer() {
   const { fetchData } = useAxios();
   const isFocused = useIsFocused();
   const theme = useTheme();
-  const [referralData, setReferralData] = useState(null);
   const [referralHistory, setReferralHistory] = useState([]);
   const [visibleSnackbar, setVisibleSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
+  const { userDetails } = useAuth();
 
   const myReferral = async () => {
     try {
       const response = await fetchData({
         url: '/user/auth/my-referrals',
       });
-      console.log(response);
       if (response.data?.success) {
-        setReferralData(response.data.data[0]);
-         setReferralHistory(response.data.data);
-        // Fetch referral history separately if needed
-        await fetchReferralHistory();
+        setReferralHistory(response.data.data);
       }
     } catch (error) {
       setSnackbarMessage('Failed to fetch referral data');
@@ -33,48 +30,22 @@ export default function Refer() {
     }
   };
 
-  // const fetchReferralHistory = async () => {
-  //   try {
-  //     const response = await fetchData({
-  //       url: '/user/auth/my-referrals', // Adjust this endpoint as per your API
-  //     });
-  //     console.log(response)
-  //     if (response.data?.success) {
-  //       console.log(response.data)
-  //       setReferralHistory(response.data.data);
-  //     }
-  //   } catch (error) {
-  //     console.error('Error fetching referral history:', error);
-  //   }
-  // };
-
   const copyToClipboard = () => {
-    if (referralData?.referralCode) {
-      Clipboard.setString(referralData.referralCode);
+    if (userDetails?.referralCode) {
+      Clipboard.setString(userDetails.referralCode);
       setSnackbarMessage('Referral code copied to clipboard!');
       setVisibleSnackbar(true);
     }
   };
-  const onShare = async () => {
-    const message = `Join using my referral code: ${referralData.referralCode}\n\nGet bonus rewards when you sign up!`;
-    try {
-      const result = await Share.share({
-        message:message
-      });
-     
-    } catch (error: any) {
-      Alert.alert(error.message);
-    }
-  };
 
-  const shareReferral = async () => {
-    onShare()
-    return 
+  const onShare = async () => {
+    const message = `Join using my referral code: ${userDetails.referralCode}\n\nGet bonus rewards when you sign up!`;
     try {
-      
-      await Linking.openURL(`whatsapp://send?text=${encodeURIComponent(message)}`);
+      await Share.share({
+        message: message
+      });
     } catch (error) {
-      setSnackbarMessage('WhatsApp not installed');
+      setSnackbarMessage(error.message);
       setVisibleSnackbar(true);
     }
   };
@@ -87,14 +58,50 @@ export default function Refer() {
 
   const renderHistoryItem = ({ item }) => (
     <List.Item
-      title={item.email}
+      title={item.email || 'New User'}
+      description={new Date(item.createdAt).toLocaleDateString()}
       left={props => <List.Icon {...props} icon="account-plus" />}
       right={props => <Text {...props} style={styles.rewardText}>+{item.reward || '0'} points</Text>}
     />
   );
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView contentContainerStyle={[styles.container, { backgroundColor: theme.colors.background }]}>
+      {/* User Profile Card */}
+      <Card style={styles.card}>
+        <Card.Content>
+          <View style={styles.profileHeader}>
+            <Avatar.Text 
+              size={64} 
+              label={userDetails?.email?.charAt(0).toUpperCase() || 'U'} 
+              style={styles.avatar}
+            />
+            <View style={styles.profileInfo}>
+              <Title style={styles.email}>{userDetails?.email}</Title>
+              <Text style={styles.memberSince}>
+                Member since: {new Date(userDetails?.createdAt).toLocaleDateString()}
+              </Text>
+            </View>
+          </View>
+          
+          <View style={styles.statsContainer}>
+            <View style={styles.statItem}>
+              <Text style={styles.statValue}>{userDetails?.rollCount || 0}</Text>
+              <Text style={styles.statLabel}>Rolls</Text>
+            </View>
+            <View style={styles.statItem}>
+              <Text style={styles.statValue}>{userDetails?.referralCount || 0}</Text>
+              <Text style={styles.statLabel}>Referrals</Text>
+            </View>
+            <View style={styles.statItem}>
+              <Text style={styles.statValue}>{userDetails?.wallet?.balance || '0.00000000'}</Text>
+              <Text style={styles.statLabel}>BTC Balance</Text>
+            </View>
+          </View>
+        </Card.Content>
+      </Card>
+
+      {/* Referral Section */}
       <Card style={styles.card}>
         <Card.Content>
           <Title style={styles.title}>Refer & Earn</Title>
@@ -102,50 +109,44 @@ export default function Refer() {
             Invite friends and earn rewards when they join using your referral code.
           </Paragraph>
 
-          {referralData ? (
-            <>
-              <View style={styles.referralContainer}>
-                <Text style={styles.label}>Your Referral Code:</Text>
-                <View style={styles.codeContainer}>
-                  <Text style={styles.code}>{referralData.referralCode}</Text>
-                  <Button 
-                    mode="text" 
-                    onPress={copyToClipboard}
-                    style={styles.copyButton}
-                  >
-                    <Icon name="content-copy" size={20} color={theme.colors.primary} />
-                  </Button>
-                </View>
-              </View>
-
-              <View style={styles.stepsContainer}>
-                <Title style={styles.howItWorks}>How It Works</Title>
-                <View style={styles.step}>
-                  <Icon name="numeric-1-circle" size={24} color={theme.colors.primary} />
-                  <Text style={styles.stepText}>Share your referral code with friends</Text>
-                </View>
-                <View style={styles.step}>
-                  <Icon name="numeric-2-circle" size={24} color={theme.colors.primary} />
-                  <Text style={styles.stepText}>They sign up using your code</Text>
-                </View>
-                <View style={styles.step}>
-                  <Icon name="numeric-3-circle" size={24} color={theme.colors.primary} />
-                  <Text style={styles.stepText}>You both earn rewards!</Text>
-                </View>
-              </View>
-
+          <View style={styles.referralContainer}>
+            <Text style={styles.label}>Your Referral Code:</Text>
+            <View style={styles.codeContainer}>
+              <Text style={styles.code}>{userDetails?.referralCode || '------'}</Text>
               <Button 
-                mode="contained" 
-                onPress={shareReferral}
-                style={styles.shareButton}
-                icon="share-variant"
+                mode="text" 
+                onPress={copyToClipboard}
+                style={styles.copyButton}
               >
-                Share 
+                <Icon name="content-copy" size={20} color={theme.colors.primary} />
               </Button>
-            </>
-          ) : (
-            <Text style={styles.loadingText}>Loading referral data...</Text>
-          )}
+            </View>
+          </View>
+
+          <View style={styles.stepsContainer}>
+            <Title style={styles.howItWorks}>How It Works</Title>
+            <View style={styles.step}>
+              <Icon name="numeric-1-circle" size={24} color={theme.colors.primary} />
+              <Text style={styles.stepText}>Share your referral code with friends</Text>
+            </View>
+            <View style={styles.step}>
+              <Icon name="numeric-2-circle" size={24} color={theme.colors.primary} />
+              <Text style={styles.stepText}>They sign up using your code</Text>
+            </View>
+            <View style={styles.step}>
+              <Icon name="numeric-3-circle" size={24} color={theme.colors.primary} />
+              <Text style={styles.stepText}>You both earn rewards!</Text>
+            </View>
+          </View>
+
+          <Button 
+            mode="contained" 
+            onPress={onShare}
+            style={styles.shareButton}
+            icon="share-variant"
+          >
+            Share Your Code
+          </Button>
         </Card.Content>
       </Card>
 
@@ -192,6 +193,45 @@ const styles = StyleSheet.create({
   },
   historyCard: {
     marginTop: 16,
+  },
+  profileHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  avatar: {
+    backgroundColor: '#6200ee',
+    marginRight: 16,
+  },
+  profileInfo: {
+    flex: 1,
+  },
+  email: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  memberSince: {
+    color: '#666',
+    fontSize: 14,
+  },
+  statsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 16,
+  },
+  statItem: {
+    alignItems: 'center',
+    padding: 8,
+    flex: 1,
+  },
+  statValue: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  statLabel: {
+    fontSize: 14,
+    color: '#666',
   },
   title: {
     fontSize: 24,
@@ -255,11 +295,6 @@ const styles = StyleSheet.create({
   },
   shareButton: {
     marginTop: 24,
-  },
-  loadingText: {
-    textAlign: 'center',
-    fontSize: 16,
-    marginVertical: 24,
   },
   rewardText: {
     color: '#4CAF50',

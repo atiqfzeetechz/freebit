@@ -13,11 +13,14 @@ import {useAuth} from '../hooks/useAuth';
 import LoginForm from '../components/LoginForm';
 import DashBoard from '../components/DashBoard';
 import useAxios from '../hooks/useAxios';
-import {showNotification} from '../utils/Notify';
 import {useIsFocused} from '@react-navigation/native';
 import notifee from '@notifee/react-native';
 import useTheme from '../hooks/useTheme';
 import useBgFetch from '../hooks/useBgfetch';
+import {useWebView} from '../context/WebviewContext';
+import CookieManager from '@react-native-cookies/cookies';
+import {showNotification} from '../utils/Notify';
+import Toast from 'react-native-toast-message';
 
 const formatDateTime = () => {
   const now = new Date();
@@ -54,12 +57,12 @@ export const scheduleNotification = async (message = 'Hii') => {
   }
 };
 const Home = () => {
-  const {token, credentials, loginType} = useAuth();
+  const {token, credentials, loginType, logout} = useAuth();
 
   const webViewRef = useRef(null);
   const {fetchData} = useAxios();
+  const {shouldLogout, clearLogoutFlag} = useWebView();
   const p = useBgFetch();
-  console.log(p);
 
   const [webViewData, setWebViewData] = useState(null);
   const [webViewError, setWebViewError] = useState(null);
@@ -89,6 +92,38 @@ const Home = () => {
       console.warn('Permission error:', err);
     }
   };
+  useEffect(() => {
+    const clearEverything = async () => {
+      CookieManager.clearAll();
+
+      // 2. Inject JS to clear localStorage, sessionStorage, and visible cookies
+      const clearScript = `
+        localStorage.clear();
+        sessionStorage.clear();
+        document.cookie.split(";").forEach(function(c) {
+          document.cookie = c.trim().split("=")[0] + "=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/";
+        });
+        true;
+      `;
+
+      // 3. Inject JS and clear WebView cache & data
+      if (webViewRef.current) {
+        webViewRef.current.injectJavaScript(clearScript);
+
+        webViewRef.current.clearCache(true);
+        webViewRef.current.clearFormData();
+        webViewRef.current.clearHistory();
+        webViewRef.current.reload();
+      }
+
+      clearLogoutFlag(); // Reset the flag so it doesn't run again
+    };
+
+    if (shouldLogout) {
+      clearEverything();
+      logout();
+    }
+  }, [shouldLogout]);
 
   useEffect(() => {
     checkPermission();
@@ -98,6 +133,21 @@ const Home = () => {
       notifee.cancelAllNotifications();
     };
   }, []);
+
+  const SaveRollhistotyinDb = async (btc:any) => {
+    try {
+      const res = await fetchData({
+        url: `/user/roll/new`,
+        method: 'POST',
+        data: {
+          btc:btc,
+        },
+      });
+      console.log(res)
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   const refreshWebView = () => {
     if (webViewRef.current) {
@@ -113,334 +163,9 @@ const Home = () => {
   };
 
   useEffect(() => {
-    refreshWebView();
+    // refreshWebView();
   }, []);
 
-  const rollWithoutCaptcha = () => {
-    if (!webViewRef.current) return;
-
-    // Click the "Play without Captcha" button
-    const clickWithoutCaptchaJS = `
-      const withoutCaptchaBtn = document.querySelector('#play_without_captchas_button');
-      if (withoutCaptchaBtn) {
-        withoutCaptchaBtn.click();
-      }
-      true;
-    `;
-
-    webViewRef.current.injectJavaScript(clickWithoutCaptchaJS);
-
-    // After 500ms, click the roll button and refresh
-    setTimeout(() => {
-      const clickRollButtonJS = `
-        const rollButton = document.querySelector('#free_play_form_button');
-        if (rollButton && !rollButton.disabled) {
-          rollButton.click();
-        }
-        true;
-      `;
-
-      webViewRef.current?.injectJavaScript(clickRollButtonJS);
-      scheduleNotification(` New Rolled ${Date.now()}`);
-
-      // Refresh the WebView after another short delay
-      setTimeout(() => {
-        refreshWebView();
-      }, 1000);
-    }, 500);
-  };
-
-  const _SignUp = () => {
-    console.log(credentials);
-    console.log({email: credentials?.email});
-    console.log(loginType);
-
-    if (loginType === 'login') {
-      console.log(`inside login`);
-      if (credentials?.email) {
-        console.log('inside email');
-        const loginFormValue = `
-      (function() {
-          window.ReactNativeWebView.postMessage(JSON.stringify({ 
-          type: 'SwitchTologin', 
-          value: 'Button Clicked
-        });
-      })();
-    `;
-        webViewRef.current?.injectJavaScript(loginFormValue);
-      }
-    } else {
-      // Handle signup form (original code)
-      if (credentials?.email) {
-        const signupFormValue = `
-                (function() {
-                    // Try to find and click the signup button to show signup form
-                    const signupButton = document.querySelector('.signup_menu_button');
-                    if (signupButton) {
-                        signupButton.click();
-                    }
-
-                    const emailAddress = document.querySelector('#signup_form_email');
-                    const password = document.querySelector('#signup_form_password');
-                    const signUpButton = document.querySelector('#signup_button');
-                    const referrerCode = document.querySelector('#referrer_in_form');
-
-                    if (referrerCode && !referrerCode.value) {
-                        referrerCode.value = '68945025';
-                        referrerCode.disabled = true;
-                    }
-
-                    if (emailAddress && password) {
-                        emailAddress.value = '${credentials.email}';
-                        password.value = '${credentials.password}';
-                    }
-                })();
-            `;
-        webViewRef.current?.injectJavaScript(signupFormValue);
-      }
-
-      const injectCaptchaAndSubmit = `
-            (function() {
-                const signUpButton = document.querySelector('#signup_button');
-                const captchaField = document.querySelector('[name="cf-turnstile-response"]');
-                
-                if (signUpButton) {
-                    // signUpButton.click();   
-                }
-            })();
-        `;
-
-      setTimeout(() => {
-        webViewRef.current?.injectJavaScript(injectCaptchaAndSubmit);
-      }, 500);
-    }
-
-    setTimeout(() => {
-      isFreebtcLoggedIn();
-    }, 700);
-  };
-
-  const isFreebtcLoggedIn = () => {
-    const rollFun = `
-      (function() {
-       const isRollButtonAvail = document.querySelector('#free_play_form_button');
-           if (isRollButtonAvail) {
-        window.ReactNativeWebView.postMessage(JSON.stringify({ 
-          type: 'roll_Button', 
-          avail: true 
-        }));
-     
-        }
-      })();
-    `;
-    webViewRef.current?.injectJavaScript(rollFun);
-    isBalance();
-  };
-
-  const isBalance = () => {
-    const isbalanceAvail = `  (function() {
-     const balanceElement = document.querySelector('#balance');
-          if(balanceElement){
-            window.ReactNativeWebView.postMessage(JSON.stringify({ 
-          type: 'balanceAvailable', 
-          avail: true 
-        }));
-          }else{
-            window.ReactNativeWebView.postMessage(JSON.stringify({ 
-          type: 'balanceAvailable', 
-          avail: true 
-        }));
-          }
-        }
-      })();`;
-
-    webViewRef.current?.injectJavaScript(isbalanceAvail);
-  };
-  // not using much
-  const rollAndCaptcha = () => {
-    const clickRollButtonJS = `
-    const rollButton = document.querySelector('#free_play_form_button');
-    if (rollButton && !rollButton.disabled) {
-      rollButton.click();
-    }
-    true;
-  `;
-
-    webViewRef.current?.injectJavaScript(clickRollButtonJS);
-    scheduleNotification(` New Rolled ${Date.now()}`);
-  };
-
-  // main fucntions which handles rolling anc checking is captcha verified or not
-  const _checkisCaptchaVerifiedAndRoll = () => {
-    console.log('Checking CAPTCHA and roll...');
-
-    // 1. First ensure the WebView has the ReactNativeWebView bridge set up
-    const initScript = `
-    window.ReactNativeWebView = window.ReactNativeWebView || {
-      postMessage: function(data) {
-        window.webkit?.messageHandlers?.ReactNativeWebView?.postMessage(data);
-      }
-    };
-    true; // Important for injectJavaScript to work
-  `;
-
-    // 2. The actual CAPTCHA checking script
-    const captchaCheckScript = `
-    (function() {
-      function checkIsCaptchaVerifiedAndRoll() {
-        const captchaField = document.querySelector('[name="cf-turnstile-response"]');
-        const rollButton = document.querySelector('#free_play_form_button');
-
-        // If already verified and roll button exists
-        if (captchaField?.value && rollButton) {
-          rollButton.click();
-          window.ReactNativeWebView.postMessage(JSON.stringify({
-            type: 'roll_triggered',
-            status: 'immediate',
-            message: 'Rolled immediately - CAPTCHA already verified'
-          }));
-          return;
-        }
-
-        // If not verified yet, set up observer
-        if (captchaField) {
-          const observer = new MutationObserver(function(mutations) {
-            mutations.forEach(function(mutation) {
-              if (mutation.type === 'attributes' && 
-                  mutation.attributeName === 'value' && 
-                  captchaField.value && 
-                  rollButton) {
-                rollButton.click();
-                window.ReactNativeWebView.postMessage(JSON.stringify({
-                  type: 'roll_triggered',
-                  status: 'after_verification',
-                  message: 'Rolled after CAPTCHA verification'
-                }));
-                observer.disconnect();
-              }
-            });
-          });
-
-          observer.observe(captchaField, {
-            attributes: true,
-            attributeFilter: ['value']
-          });
-
-          window.ReactNativeWebView.postMessage(JSON.stringify({
-            type: 'observer_setup',
-            message: 'Waiting for CAPTCHA verification'
-          }));
-          return;
-        }
-
-        if(!rollButton){
-         window.ReactNativeWebView.postMessage(JSON.stringify({
-          type: 'error',
-          message: 'Roll Button Not Found'
-        }));
-        }else{
-
-        window.ReactNativeWebView.postMessage(JSON.stringify({
-          type: 'error',
-          message: 'CAPTCHA field not found',
-          value:rollButton
-        }));
-        }
-       
-        
-        
-      }
-
-      // Execute the function
-      checkIsCaptchaVerifiedAndRoll();
-    })();
-    true; // Important to return true
-  `;
-
-    // 3. First inject the initialization script
-    webViewRef.current?.injectJavaScript(initScript);
-
-    // 4. Then inject the CAPTCHA check script after a small delay
-    setTimeout(() => {
-      webViewRef.current?.injectJavaScript(captchaCheckScript);
-    }, 300);
-  };
-
-  const directlogin = () => {
-    if (loginType === 'login' && credentials?.email) {
-      console.log('Attempting direct login with:', credentials);
-
-      // First, click the login button to show the form
-      const clickLoginButtonJS = `
-      (function() {
-        const loginButton = document.querySelector('.login_menu_button');
-        if (loginButton) {
-          loginButton.click();
-          window.ReactNativeWebView.postMessage(JSON.stringify({
-            type: 'login_button_clicked',
-            success: true
-          }));
-        } else {
-          window.ReactNativeWebView.postMessage(JSON.stringify({
-            type: 'login_button_clicked',
-            success: false,
-            error: 'Login button not found'
-          }));
-        }
-        true;
-      })();
-    `;
-
-      webViewRef.current?.injectJavaScript(clickLoginButtonJS);
-
-      // Then after a delay, fill the form
-      setTimeout(() => {
-        const fillFormJS = `
-        (function() {
-          // Use the correct selectors for LOGIN form (not signup)
-          const emailField = document.querySelector('#login_form_btc_address');
-          const passwordField = document.querySelector('#login_form_password');
-          const fa2Field = document.querySelector('#login_form_2fa');
-          
-          if (emailField) {
-            emailField.value = '${credentials.email}';
-            console.log('Email field filled');
-          } else {
-            console.log('Email field not found');
-          }
-          
-          if (passwordField) {
-            passwordField.value = '${credentials.password}';
-            console.log('Password field filled');
-          } else {
-            console.log('Password field not found');
-          }
-          
-          if (fa2Field && '${credentials.FA2}') {
-            fa2Field.value = '${credentials.FA2}';
-            console.log('2FA field filled');
-          }
-          
-          // Submit the form after filling
-          const loginSubmitButton = document.querySelector('#login_button');
-          if (loginSubmitButton) {
-            setTimeout(() => {
-              loginSubmitButton.click();
-              console.log('Login form submitted');
-            }, 500);
-          }
-          
-          true;
-        })();
-      `;
-
-        webViewRef.current?.injectJavaScript(fillFormJS);
-      }, 1000); // Increased delay to ensure form is visible
-      setTimeout(() => {
-        isFreebtcLoggedIn();
-      }, 1300);
-    }
-  };
   const onMessage = (event: any) => {
     try {
       const data = JSON.parse(event.nativeEvent.data);
@@ -523,116 +248,358 @@ const Home = () => {
     }
   };
 
+  const handleWebViewLoad = () => {
+    // WebView loaded handler if needed
+  };
+
   const injectedJavaScript = `
+(function () {
+  // Check for signup or login form
+  const isSignUpOrLoginForm = document.querySelector('#signup_form_div');
+  window.ReactNativeWebView.postMessage(JSON.stringify({
+    type: isSignUpOrLoginForm ? 'signupFormAvail' : 'signupFormNotAvail',
+    message: isSignUpOrLoginForm ? 'Signup or LoginForm' : 'Signup not LoginForm'
+  }));
+
+  // Timer extraction helper
+  function extractAndPostTimer() {
+    const timerElement = document.getElementById('time_remaining');
+     const balanceElement = document.querySelector('#balance');
+    if (!timerElement) return;
+
+    const amountElements = timerElement.querySelectorAll('.countdown_amount');
+    const minutes = amountElements[0]?.textContent.trim() || '00';
+    const seconds = amountElements[1]?.textContent.trim() || '00';
+
+    window.ReactNativeWebView.postMessage(JSON.stringify({
+      type: 'TIMER_INITIAL',
+      minutes: minutes,
+      seconds: seconds,
+      balance:balanceElement ? balanceElement.innerText : null,
+      message: 'Timer initially detected'
+    }));
+  }
+
+  // Observe DOM for when #time_remaining becomes available
+  const observeTimerContainer = new MutationObserver(() => {
+    const timerContainer = document.getElementById('time_remaining');
+    if (timerContainer) {
+      extractAndPostTimer();
+      observeTimerContainer.disconnect(); // Stop after first detection
+    }
+  });
+
+  observeTimerContainer.observe(document.body, {
+    childList: true,
+    subtree: true,
+  });
+
+  // Check if timer already exists at load time
+  if (document.getElementById('time_remaining')) {
+    extractAndPostTimer();
+    observeTimerContainer.disconnect(); // Already present, no need to observe
+  }
+
+  // Observe DOM for when #free_play_form_button becomes available
+  const observeButton = new MutationObserver(() => {
+    const button = document.querySelector('#free_play_form_button');
+    if (button) {
+      window.ReactNativeWebView.postMessage(JSON.stringify({
+        type: 'BUTTON_AVAILABLE',
+        message: 'Button detected in DOM'
+      }));
+      observeButton.disconnect();
+    }
+  });
+
+  observeButton.observe(document.body, {
+    childList: true,
+    subtree: true
+  });
+
+  // Check if button already exists at load time
+  const existingButton = document.querySelector('#free_play_form_button');
+  if (existingButton) {
+    window.ReactNativeWebView.postMessage(JSON.stringify({
+      type: 'BUTTON_AVAILABLE',
+      message: 'Button already exists'
+    }));
+    observeButton.disconnect();
+  }
+
+ const resultContainer = document.getElementById('free_play_result');
+  
+  if (resultContainer) {
+    const btc = document.querySelector('#winnings')?.textContent.trim() || '';
+    const tickets = document.querySelector('#fp_lottery_tickets_won')?.textContent.trim() || '0';
+    const rewards = document.querySelector('#fp_reward_points_won')?.textContent.trim() || '0';
+
+    window.ReactNativeWebView.postMessage(JSON.stringify({
+      type: 'ROLL_RESULT',
+      btc,
+      tickets,
+      rewards,
+      message: 'Roll result found without observer'
+    }));
+  }else{
+  window.ReactNativeWebView.postMessage(JSON.stringify({
+      type: 'ROLL_RESULT_NOTFOUND',
+      btc,
+      tickets,
+      rewards,
+      message: 'Roll result found without observer'
+    }));
+  }
+
+  return true;
+})();
+`;
+
+  const loginandSignUp = () => {
+    console.log(loginType);
+    if (loginType === 'login') {
+      // First, click the login button to show the form
+      const clickLoginButtonJS = `
+      (function() {
+        const loginButton = document.querySelector('.login_menu_button');
+        if (loginButton) {
+          loginButton.click();
+          window.ReactNativeWebView.postMessage(JSON.stringify({
+            type: 'login_button_clicked',
+            success: true
+          }));
+        } else {
+          window.ReactNativeWebView.postMessage(JSON.stringify({
+            type: 'login_button_clicked',
+            success: false,
+            error: 'Login button not found'
+          }));
+        }
+        true;
+      })();
+    `;
+
+      webViewRef.current?.injectJavaScript(clickLoginButtonJS);
+
+      const fillFormJS = `
+        (function() {
+          // Use the correct selectors for LOGIN form (not signup)
+          const emailField = document.querySelector('#login_form_btc_address');
+          const passwordField = document.querySelector('#login_form_password');
+          const fa2Field = document.querySelector('#login_form_2fa');
+          
+          if (emailField) {
+            emailField.value = '${credentials.email}';
+            console.log('Email field filled');
+          } else {
+            console.log('Email field not found');
+          }
+          
+          if (passwordField) {
+            passwordField.value = '${credentials.password}';
+            console.log('Password field filled');
+          } else {
+            console.log('Password field not found');
+          }
+           if(${credentials?.FA2}){
+             if (fa2Field && '${credentials.FA2}') {
+            fa2Field.value = '${credentials.FA2}';
+            console.log('2FA field filled');
+          }
+           }
+        
+          
+          // Submit the form after filling
+          const loginSubmitButton = document.querySelector('#login_button');
+          if (loginSubmitButton) {
+            setTimeout(() => {
+              loginSubmitButton.click();
+              console.log('Login form submitted');
+            }, 500);
+          }
+          
+          true;
+        })();
+      `;
+      setTimeout(() => {
+        webViewRef.current?.injectJavaScript(fillFormJS);
+      }, 1000);
+    }
+    if (loginType === 'signUp') {
+      console.log('Starting sign-up process');
+
+      // First, fill the form fields
+      const fillForm = `
     (function() {
-        let dataExtracted = false;
-        let retryCount = 0;
-        const MAX_RETRIES = 2;
-        const currentUrl = window.location.href;
+      const emailAddress = document.querySelector('#signup_form_email');
+      const password = document.querySelector('#signup_form_password');
+      const referrerCode = document.querySelector('#referrer_in_form');
 
-      window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'PAGE_URL', url: currentUrl }));
+      if (referrerCode && !referrerCode.value) {
+        referrerCode.value = '68945025';
+        referrerCode.disabled = true;
+      }
 
-      function extractTimer() {
-        try {
-          const timerElement = document.getElementById('time_remaining');
-          if (!timerElement) return null;
+      if (emailAddress && password) {
+        emailAddress.value = '${credentials.email}';
+        password.value = '${credentials.password}';
+      }
+      return true;
+    })();
+  `;
+      webViewRef.current?.injectJavaScript(fillForm);
 
-          const amountElements = timerElement.querySelectorAll('.countdown_amount');
-          const minutesElement = amountElements[0];
-          const secondsElement = amountElements[1];
+      // Then set up captcha observation and auto-submit
+      const captchaObserver = `
+    (function() {
+      // Elements we need
+      const signUpButton = document.querySelector('#signup_button');
+      const captchaField = document.querySelector('[name="cf-turnstile-response"]');
+      
+      if (!captchaField) {
+        window.ReactNativeWebView.postMessage(JSON.stringify({
+          type: 'TURNSTILE_ERROR',
+          message: 'Captcha field not found'
+        }));
+        return true;
+      }
 
-          return {
-            minutes: minutesElement ? minutesElement.textContent.trim() : '00',
-            seconds: secondsElement ? secondsElement.textContent.trim() : '00'
-          };
-        } catch (error) {
-          console.error('Timer extraction error:', error);
-          return { minutes: '00', seconds: '00' };
+      if (!signUpButton) {
+        window.ReactNativeWebView.postMessage(JSON.stringify({
+          type: 'SIGNUP_ERROR',
+          message: 'Signup button not found'
+        }));
+        return true;
+      }
+
+      // Observer for captcha changes
+      const observer = new MutationObserver(function() {
+        if (captchaField.value) {
+          window.ReactNativeWebView.postMessage(JSON.stringify({
+            type: 'TURNSTILE_VERIFIED',
+            message: 'Captcha verified, submitting form'
+          }));
+          
+          // Add slight delay to ensure everything is ready
+          setTimeout(() => {
+            signUpButton.click();
+          }, 500);
+          
+          // Clean up observer after submission
+          observer.disconnect();
+        }
+      });
+
+      // Start observing
+      observer.observe(captchaField, {
+        attributes: true,
+        attributeFilter: ['value'],
+        childList: false,
+        subtree: false
+      });
+
+      // Check immediately in case captcha is already verified
+      if (captchaField.value) {
+        window.ReactNativeWebView.postMessage(JSON.stringify({
+          type: 'TURNSTILE_VERIFIED',
+          message: 'Captcha already verified, submitting form'
+        }));
+        setTimeout(() => {
+          signUpButton.click();
+        }, 500);
+        observer.disconnect();
+      }
+
+      return true;
+    })();
+  `;
+
+      webViewRef.current?.injectJavaScript(captchaObserver);
+    }
+  };
+
+  const rollwithButton = () => {
+    const script = `
+    (function() {
+      const captchaField = document.querySelector('[name="cf-turnstile-response"]');
+      const rollButton = document.querySelector('#free_play_form_button');
+
+      if (!captchaField) {
+        window.ReactNativeWebView.postMessage(JSON.stringify({
+          type: 'CAPTCHA_NOT_FOUND',
+          message: 'Captcha field not found'
+        }));
+        return false;
+      }
+
+      let lastCaptchaValue = captchaField.value || '';
+
+      // Function to try clicking the roll button
+      function tryClickRollButton() {
+        const button = document.querySelector('#free_play_form_button');
+        if (button && !button.disabled) {
+          button.click();
+          window.ReactNativeWebView.postMessage(JSON.stringify({
+            type: 'ROLL_CLICKED',
+            message: 'Roll button clicked after captcha filled'
+          }));
+
+
+          //  check the winning results
+              setTimeout(() => {
+                // ROLL RESULT CHECK (safe)
+                      const resultContainer = document.getElementById('free_play_result');
+
+                      if (resultContainer) {
+                        const btc = document.querySelector('#winnings')?.textContent.trim() || '';
+                        const tickets = document.querySelector('#fp_lottery_tickets_won')?.textContent.trim() || '0';
+                        const rewards = document.querySelector('#fp_reward_points_won')?.textContent.trim() || '0';
+
+                        window.ReactNativeWebView.postMessage(JSON.stringify({
+                          type: 'ROLL_RESULT',
+                          btc,
+                          tickets,
+                          rewards,
+                          message: 'Roll result found without observer'
+                        }));
+                      } else {
+                        window.ReactNativeWebView.postMessage(JSON.stringify({
+                          type: 'ROLL_RESULT_NOTFOUND',
+                          message: 'Roll result not yet available'
+                        }));
+                      }
+          }, 1200);
+
+        } else {
+          window.ReactNativeWebView.postMessage(JSON.stringify({
+            type: 'ROLL_NOT_READY',
+            message: 'Roll button not found or disabled'
+          }));
         }
       }
 
-  function setupFreePlayButtonObserver() {
-    const freePlayButton = document.querySelector('#free_play_form_button');
-    
-    if (freePlayButton) {
-      const initialDisplay = window.getComputedStyle(freePlayButton).display;
-      window.ReactNativeWebView.postMessage(JSON.stringify({
-        type: 'freePlayButtonDisplayChange',
-        isVisible: initialDisplay === 'inline-block',
-        displayValue: initialDisplay,
-        message: 'Initial free play button state captured'
-      }));
-
-      const observer = new MutationObserver(function(mutations) {
-        mutations.forEach(function(mutation) {
-          if (mutation.type === 'attributes' && 
-              (mutation.attributeName === 'style' || mutation.attributeName === 'class')) {
-            const currentDisplay = window.getComputedStyle(freePlayButton).display;
-            
-            window.ReactNativeWebView.postMessage(JSON.stringify({
-              type: 'freePlayButtonDisplayChange',
-              isVisible: currentDisplay === 'inline-block',
-              displayValue: currentDisplay,
-              message: 'Free play button display changed'
-            }));
-
-            const canRoll = !freePlayButton.disabled;
-            window.ReactNativeWebView.postMessage(JSON.stringify({
-              type: 'freePlayButtonAvailability',
-              canRoll: canRoll,
-              message: canRoll ? 'Button is enabled' : 'Button is disabled'
-            }));
-          }
-        });
-      });
-
-      observer.observe(freePlayButton, {
-        attributes: true,
-        attributeFilter: ['style', 'class']
-      });
-
-      return true;
-    }
-    return false;
-  }
-
-  function monitorCaptcha() {
-    const captchaField = document.querySelector('[name="cf-turnstile-response"]');
-    const signUpButton = document.querySelector('#signup_button');
-    let lastCaptchaValue = '';
-
-    if (captchaField) {
-      if (captchaField.value && captchaField.value !== lastCaptchaValue) {
-        lastCaptchaValue = captchaField.value;
+      // Initial check
+      if (lastCaptchaValue) {
         window.ReactNativeWebView.postMessage(JSON.stringify({
-          type: 'captchaValue',
-          value: captchaField.value,
-          message: 'Initial captcha value found'
+          type: 'CAPTCHA_INITIAL_VALUE',
+          value: lastCaptchaValue,
+          message: 'Captcha initially present'
         }));
+        tryClickRollButton();
       }
 
-      const observer = new MutationObserver(function(mutations) {
-        mutations.forEach(function(mutation) {
-          if (mutation.type === 'attributes' && mutation.attributeName === 'value') {
-            if (captchaField.value !== lastCaptchaValue) {
-              lastCaptchaValue = captchaField.value;
-
-              window.ReactNativeWebView.postMessage(JSON.stringify({
-                type: 'captchaValue',
-                value: captchaField.value,
-                message: 'Captcha value changed'
-              }));
-
-              if (signUpButton) {
-                window.ReactNativeWebView.postMessage(JSON.stringify({
-                  type: 'Captcha&form',
-                  value: captchaField.value,
-                  message: 'Captcha value changed with signup button present'
-                }));
-              }
-            }
-          }
-        });
+      // Observer for captcha value changes
+      const observer = new MutationObserver(() => {
+        const newValue = captchaField.value;
+        if (newValue && newValue !== lastCaptchaValue) {
+          lastCaptchaValue = newValue;
+          window.ReactNativeWebView.postMessage(JSON.stringify({
+            type: 'CAPTCHA_UPDATED',
+            value: newValue,
+            message: 'Captcha value changed'
+          }));
+          tryClickRollButton();
+        }
       });
 
       observer.observe(captchaField, {
@@ -640,145 +607,52 @@ const Home = () => {
         attributeFilter: ['value']
       });
 
+      // Optional cleanup
+      window._captchaObserverCleanup = function() {
+        observer.disconnect();
+      };
+
       return true;
+    })();
+  `;
+
+    webViewRef.current?.injectJavaScript(script);
+  };
+
+  const onMessages = (event: any) => {
+    const data = JSON.parse(event.nativeEvent.data);
+    const type = data?.type;
+    console.log(type);
+    switch (type) {
+      case 'signupFormAvail':
+        loginandSignUp();
+        break;
+
+      case 'TURNSTILE_TOKEN':
+        showNotification('Captcha Verified', 'success');
+        console.log(data);
+        break;
+
+      case 'BUTTON_AVAILABLE':
+        rollwithButton();
+        break;
+
+      case 'TIMER_INITIAL':
+        console.log(data);
+        break;
+
+      case 'ROLL_RESULT':
+        if(data.btc){
+
+          SaveRollhistotyinDb(data.btc)
+        }
+        break;
     }
-    return false;
-  }
-
-  function extractDataOnce() {
-    if (dataExtracted || retryCount >= MAX_RETRIES) return;
-
-    try {
-      const balanceElement = document.querySelector('#balance');
-      const balance = balanceElement ? balanceElement.innerText : null;
-      const isplay_without_captchas_button = document.querySelector('#play_without_captchas_button');
-
-      if (isplay_without_captchas_button) {
-        window.ReactNativeWebView.postMessage(JSON.stringify({
-          type: 'Play_withoutCaptcha',
-          available: true,
-          message: 'Play without captchas button found'
-        }));
-      }
-
-      const rollButton = document.querySelector('#free_play_form_button');
-      const canRoll = !!rollButton && !rollButton.disabled;
-
-      const timer = extractTimer();
-
-      const captchaFound = monitorCaptcha();
-      const freePlayObserverSetUp = setupFreePlayButtonObserver();
-
-      if (balance !== null || timer !== null || freePlayObserverSetUp) {
-        dataExtracted = true;
-        window.ReactNativeWebView.postMessage(JSON.stringify({
-          type: 'page_data',
-          balance: balance,
-          canRoll: canRoll,
-          timer: timer,
-          timestamp: new Date().toISOString(),
-          captchaAvailable: captchaFound,
-          freePlayObserverSetUp: freePlayObserverSetUp,
-          message: 'Initial page data extracted'
-        }));
-      } else {
-        throw new Error('Elements not found');
-      }
-    } catch (error) {
-      retryCount++;
-      if (retryCount < MAX_RETRIES) {
-        setTimeout(extractDataOnce, 1000);
-      } else {
-        window.ReactNativeWebView.postMessage(JSON.stringify({
-          type: 'extraction_error',
-          error: 'Max retries reached. Elements not found.',
-          message: 'Failed to extract data after maximum retries'
-        }));
-      }
-    }
-  }
-
-  let signupRetryCount = 0;
-  const SIGNUP_MAX_RETRIES = 5;
-
-  function tryInjectSignup() {
-    if (signupRetryCount >= SIGNUP_MAX_RETRIES) return;
-
-    const signupForm = document.querySelector('#signup_form_div');
-    const isRollButtonAvail = document.querySelector('#free_play_form_button');
-    const captchaField = document.querySelector('[name="cf-turnstile-response"]');
-    
-    if (isRollButtonAvail) {
-      window.ReactNativeWebView.postMessage(JSON.stringify({ 
-        type: 'roll_Button', 
-        avail: true,
-        message: 'Roll button is available' 
-      }));
-    }
-
-    if (isRollButtonAvail && captchaField && captchaField.value) {
-      window.ReactNativeWebView.postMessage(JSON.stringify({ 
-        type: 'rollButton&captcha', 
-        avail: true,
-        message: 'Roll button and captcha are both available' 
-      }));
-    }
-
-    if (signupForm) {
-      const emailAddress = document.querySelector('#signup_form_email');
-      const password = document.querySelector('#signup_form_password');
-      const signUpButton = document.querySelector('#signup_button');
-      const referrerCode = document.querySelector('#referrer_in_form');
-      const captchaField = document.querySelector('[name="cf-turnstile-response"]');
-
-      function sendFormValues() {
-        const message = {
-          type: 'form_values',
-          email: emailAddress?.value || '',
-          password: password?.value || '',
-          referrerCode: referrerCode?.value || '',
-          message: 'Current form values'
-        };
-        window.ReactNativeWebView.postMessage(JSON.stringify(message));
-      }
-
-      sendFormValues();
-
-      if (signUpButton) {
-        signUpButton.addEventListener('click', function() {
-          window.ReactNativeWebView.postMessage(JSON.stringify({
-            type: 'button_clicked',
-            message: 'Signup button clicked'
-          }));
-        });
-      }
-
-      if (signUpButton && captchaField && captchaField.value) {
-        window.ReactNativeWebView.postMessage(JSON.stringify({
-          type: 'signup_ready',
-          message: 'Signup button and captcha are both available'
-        }));
-      }
-    } else {
-      signupRetryCount++;
-      setTimeout(tryInjectSignup, 1000);
-    }
-  }
-
-  // Initial execution
-  extractDataOnce();
-  tryInjectSignup();
-
-  true;
-})();
-`;
-
-  const handleWebViewLoad = () => {
-    // WebView loaded handler if needed
   };
 
   return (
     <>
+      <Toast position="top" swipeable topOffset={100} />
       {token ? (
         <>
           <View
@@ -796,7 +670,7 @@ const Home = () => {
               ref={webViewRef}
               source={{uri: 'https://freebitco.in/'}}
               injectedJavaScript={injectedJavaScript}
-              onMessage={onMessage}
+              onMessage={onMessages}
               onLoadEnd={handleWebViewLoad}
               style={styles.hiddenWebView}
               javaScriptEnabled={true}
@@ -829,17 +703,3 @@ const styles = StyleSheet.create({
 });
 
 export default Home;
-
-// import { StyleSheet, Text, View } from 'react-native'
-// import React from 'react'
-// import BgFetchScreen from '../components/BgFetchScreen'
-
-// export default function Home() {
-//   return (
-
-//     <BgFetchScreen/>
-
-//   )
-// }
-
-// const styles = StyleSheet.create({})

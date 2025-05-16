@@ -1,7 +1,8 @@
 import {useState} from 'react';
 import axios, {AxiosRequestConfig, AxiosError} from 'axios';
 import {showNotification} from '../utils/Notify';
-import { useAuth } from './useAuth';
+import {useAuth} from './useAuth';
+import {useLoader} from './useLoader';
 
 interface FetchDataProps {
   url: string;
@@ -26,10 +27,9 @@ interface errorRes<T = any> {
 }
 
 export default function useAxios() {
-  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<errorRes>();
-  const {token}=useAuth()
-
+  const {token} = useAuth();
+  const {showLoader, hideLoader} = useLoader();
 
   const instance = axios.create({
     baseURL: 'https://backend.freebit.fzeetechz.com/api/v1',
@@ -37,7 +37,6 @@ export default function useAxios() {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
     },
-  
   });
 
   const fetchData = async <T = any,>({
@@ -46,8 +45,8 @@ export default function useAxios() {
     data = null,
     params = null,
   }: FetchDataProps): Promise<AxiosResponse<T> | undefined> => {
-    setIsLoading(true);
     setError(null);
+    showLoader();
 
     const config: AxiosRequestConfig = {
       url,
@@ -58,10 +57,8 @@ export default function useAxios() {
 
     try {
       const response = await instance.request<T>(config);
-      setIsLoading(false);
-console.log(response)
-        console.log(response.data);
-        showNotification(response?.data?.message, 'success');
+
+      showNotification(response?.data?.message, 'success');
 
       return {
         data: response.data,
@@ -78,8 +75,6 @@ console.log(response)
         errors: axiosError.response?.data?.errors,
       });
 
-      setIsLoading(false);
-
       // Return undefined or throw error based on your needs
       const messages = axiosError.response?.data?.errors;
       if (messages?.length) {
@@ -93,8 +88,10 @@ console.log(response)
         message: axiosError.response?.data?.message,
         error: axiosError.response?.data?.errors,
       };
+    } finally {
+      hideLoader();
     }
   };
 
-  return {fetchData, isLoading, error};
+  return {fetchData, error};
 }
