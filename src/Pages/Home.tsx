@@ -334,21 +334,21 @@ const Home = () => {
     const tickets = document.querySelector('#fp_lottery_tickets_won')?.textContent.trim() || '0';
     const rewards = document.querySelector('#fp_reward_points_won')?.textContent.trim() || '0';
 
-    window.ReactNativeWebView.postMessage(JSON.stringify({
-      type: 'ROLL_RESULT',
-      btc,
-      tickets,
-      rewards,
-      message: 'Roll result found without observer'
-    }));
+    // window.ReactNativeWebView.postMessage(JSON.stringify({
+    //   type: 'ROLL_RESULT',
+    //   btc,
+    //   tickets,
+    //   rewards,
+    //   message: 'Roll result found without observer'
+    // }));
   }else{
-  window.ReactNativeWebView.postMessage(JSON.stringify({
-      type: 'ROLL_RESULT_NOTFOUND',
-      btc,
-      tickets,
-      rewards,
-      message: 'Roll result found without observer'
-    }));
+  // window.ReactNativeWebView.postMessage(JSON.stringify({
+  //     type: 'ROLL_RESULT_NOTFOUND',
+  //     btc,
+  //     tickets,
+  //     rewards,
+  //     message: 'Roll result found without observer'
+  //   }));
   }
 
   return true;
