@@ -143,6 +143,8 @@ const Home = () => {
           btc: btc,
         },
       });
+      
+        refreshWebView()
       console.log(res);
     } catch (error) {
       console.log(error);
@@ -586,7 +588,7 @@ const Home = () => {
     }
   };
 
-  const rollwithButton = () => {
+ const rollwithButton = () => {
     const script = `
     (function() {
       const captchaField = document.querySelector('[name="cf-turnstile-response"]');
@@ -602,58 +604,46 @@ const Home = () => {
 
       let lastCaptchaValue = captchaField.value || '';
 
-      // Function to check if button is visible and enabled
-      function isButtonClickable(button) {
-        if (!button) return false;
-        
-        // Check computed style for display property
-        const style = window.getComputedStyle(button);
-        const isVisible = style.display !== 'none';
-        const isEnabled = !button.disabled;
-        
-        return isVisible && isEnabled;
-      }
-
       // Function to try clicking the roll button
       function tryClickRollButton() {
         const button = document.querySelector('#free_play_form_button');
-        
-        if (isButtonClickable(button)) {
+        if (button && !button.disabled) {
           button.click();
           window.ReactNativeWebView.postMessage(JSON.stringify({
             type: 'ROLL_CLICKED',
             message: 'Roll button clicked after captcha filled'
           }));
 
-          // Check the winning results
-          setTimeout(() => {
-            const resultContainer = document.getElementById('free_play_result');
-            if (resultContainer) {
-              const btc = document.querySelector('#winnings')?.textContent.trim() || '';
-              const tickets = document.querySelector('#fp_lottery_tickets_won')?.textContent.trim() || '0';
-              const rewards = document.querySelector('#fp_reward_points_won')?.textContent.trim() || '0';
 
-              window.ReactNativeWebView.postMessage(JSON.stringify({
-                type: 'ROLL_RESULT',
-                btc,
-                tickets,
-                rewards,
-                message: 'Roll result found without observer'
-              }));
-            } else {
-              window.ReactNativeWebView.postMessage(JSON.stringify({
-                type: 'ROLL_RESULT_NOTFOUND',
-                message: 'Roll result not yet available'
-              }));
-            }
+          //  check the winning results
+              setTimeout(() => {
+                // ROLL RESULT CHECK (safe)
+                      const resultContainer = document.getElementById('free_play_result');
+
+                      if (resultContainer) {
+                        const btc = document.querySelector('#winnings')?.textContent.trim() || '';
+                        const tickets = document.querySelector('#fp_lottery_tickets_won')?.textContent.trim() || '0';
+                        const rewards = document.querySelector('#fp_reward_points_won')?.textContent.trim() || '0';
+
+                        window.ReactNativeWebView.postMessage(JSON.stringify({
+                          type: 'ROLL_RESULT',
+                          btc,
+                          tickets,
+                          rewards,
+                          message: 'Roll result found without observer'
+                        }));
+                      } else {
+                        window.ReactNativeWebView.postMessage(JSON.stringify({
+                          type: 'ROLL_RESULT_NOTFOUND',
+                          message: 'Roll result not yet available'
+                        }));
+                      }
           }, 1200);
+
         } else {
-          const reason = !button ? 'Button not found' : 
-                       (window.getComputedStyle(button).display === 'none' ? 'Button is hidden' : 'Button is disabled');
-          
           window.ReactNativeWebView.postMessage(JSON.stringify({
             type: 'ROLL_NOT_READY',
-            message: reason
+            message: 'Roll button not found or disabled'
           }));
         }
       }
