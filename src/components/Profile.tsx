@@ -1,5 +1,6 @@
-import {StyleSheet, View, ScrollView} from 'react-native';
-import React, {useEffect} from 'react';
+import React, {useEffect, useState} from 'react';
+import {StyleSheet, View, ScrollView, Alert} from 'react-native';
+import {launchImageLibrary, launchCamera} from 'react-native-image-picker';
 import useAxios from '../hooks/useAxios';
 import {useAuth} from '../hooks/useAuth';
 import {
@@ -9,16 +10,22 @@ import {
   useTheme as PaperTheme,
   IconButton,
   Avatar,
+  Button,
+  Portal,
+  Modal,
 } from 'react-native-paper';
 import useTheme from '../hooks/useTheme';
-import { wp } from '../helper/hpwp';
+import {wp} from '../helper/hpwp';
+import { imageFullUrl } from '../utils/urlConvertor';
 
 export default function UserProfile() {
   const {fetchData} = useAxios();
   const {setuserDetails, userDetails} = useAuth();
   const theme = PaperTheme();
-  const {colors} =useTheme()
-  
+  const {colors} = useTheme();
+  const [avatarSource, setAvatarSource] = useState(null);
+  const [visible, setVisible] = useState(false);
+
   const getMe = async () => {
     try {
       const {data} = await fetchData({
@@ -33,6 +40,71 @@ export default function UserProfile() {
   useEffect(() => {
     getMe();
   }, []);
+
+  const showModal = () => setVisible(true);
+  const hideModal = () => setVisible(false);
+
+  const handleImagePicker = async type => {
+    hideModal();
+    const options = {
+      mediaType: 'photo',
+      quality: 0.8,
+      maxWidth: 500,
+      maxHeight: 500,
+      includeBase64: true,
+    };
+
+    try {
+      const response = await (type === 'camera'
+        ? launchCamera
+        : launchImageLibrary)(options);
+
+      if (response.didCancel) {
+        console.log('User cancelled image picker');
+      } else if (response.errorCode) {
+        console.log('ImagePicker Error: ', response.errorMessage);
+        Alert.alert('Error', 'Failed to select image');
+      } else if (response.assets && response.assets[0].uri) {
+        const source = {uri: response.assets[0].uri};
+        const asset = response.assets[0];
+        const imageFile = {
+          uri: asset.uri,
+          type: 'image/jpg' || 'image/jpeg',
+          name:
+            asset.fileName ||
+            `profile_image_${Date.now()}.${asset.uri.split('.').pop()}`,
+          filename:
+            asset.fileName ||
+            `profile_image_${Date.now()}.${asset.uri.split('.').pop()}`,
+        };
+
+        uploadImage(imageFile);
+    
+      }
+    } catch (error) {
+      console.log('ImagePicker Error: ', error);
+      Alert.alert('Error', 'Failed to select image');
+    }
+  };
+
+  const uploadImage = async (_data: any) => {
+    const payload = new FormData();
+    payload.append('profile-image', _data);
+    try {
+      const res = await fetchData({
+        url: '/user/auth/update-profile',
+        method: 'PATCH',
+        data: payload,
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      console.log(res);
+      getMe()
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   const renderStatus = (status, text) => (
     <View style={styles.statusContainer}>
@@ -69,27 +141,32 @@ export default function UserProfile() {
       style={[styles.container, {backgroundColor: theme.colors.background}]}
       contentContainerStyle={styles.contentContainer}
       showsVerticalScrollIndicator={false}>
-     
       {/* Profile Header Card */}
       <Card style={[styles.card, styles.profileCard]}>
         <Card.Content style={styles.profileContent}>
           <View style={styles.avatarContainer}>
-            {/* <Avatar.Text
-              size={72}
-              label={userDetails?.email?.charAt(0).toUpperCase() || 'U'}
-              style={styles.avatar}
-            /> */}
-            {/* <View style={styles.verifiedBadge}>
-              <IconButton
-                icon={
-                  userDetails?.isEmailVerified
-                    ? 'check-decagram'
-                    : 'alert-decagram'
-                }
-                iconColor={userDetails?.isEmailVerified ? '#4CAF50' : '#F44336'}
-                size={20}
+            {userDetails?.profileImage ? (
+              <Avatar.Image
+                size={100}
+                source={{
+                  uri:imageFullUrl(userDetails?.profileImage)
+                }}
+                style={styles.avatar}
               />
-            </View> */}
+            ) : (
+              <Avatar.Text
+                size={100}
+                label={userDetails?.email?.charAt(0).toUpperCase() || 'U'}
+                style={styles.avatar}
+              />
+            )}
+            <IconButton
+              icon="pencil"
+              size={20}
+              style={styles.editButton}
+              onPress={showModal}
+              iconColor="white"
+            />
           </View>
 
           <Text variant="titleLarge" style={styles.emailText}>
@@ -173,6 +250,42 @@ export default function UserProfile() {
           )}
         </Card.Content>
       </Card>
+
+      {/* Bottom Modal for Image Selection */}
+      <Portal>
+        <Modal
+          visible={visible}
+          onDismiss={hideModal}
+          contentContainerStyle={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text variant="titleMedium" style={styles.modalTitle}>
+              Update Profile Picture
+            </Text>
+            <View style={styles.modalButtons}>
+              <Button
+                mode="contained"
+                icon="camera"
+                onPress={() => handleImagePicker('camera')}
+                style={styles.modalButton}>
+                Take Photo
+              </Button>
+              <Button
+                mode="contained"
+                icon="image"
+                onPress={() => handleImagePicker('gallery')}
+                style={styles.modalButton}>
+                Choose from Gallery
+              </Button>
+              <Button
+                mode="outlined"
+                onPress={hideModal}
+                style={styles.modalButton}>
+                Cancel
+              </Button>
+            </View>
+          </View>
+        </Modal>
+      </Portal>
     </ScrollView>
   );
 }
@@ -180,12 +293,10 @@ export default function UserProfile() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    width:wp(100)
-    
+    width: wp(100),
   },
   contentContainer: {
     padding: 16,
-   
   },
   card: {
     marginBottom: 16,
@@ -206,14 +317,15 @@ const styles = StyleSheet.create({
   },
   avatar: {
     backgroundColor: '#6200EE',
+    width: 100,
+    height: 100,
   },
-  verifiedBadge: {
+  editButton: {
     position: 'absolute',
-    bottom: 0,
-    right: 0,
-    backgroundColor: 'white',
+    bottom: -5,
+    right: -5,
+    backgroundColor: 'green',
     borderRadius: 20,
-    padding: 2,
   },
   emailText: {
     marginBottom: 16,
@@ -270,5 +382,24 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontWeight: '500',
+  },
+  modalContainer: {
+    backgroundColor: 'white',
+    padding: 20,
+    margin: 20,
+    borderRadius: 10,
+  },
+  modalContent: {
+    padding: 10,
+  },
+  modalTitle: {
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  modalButtons: {
+    gap: 10,
+  },
+  modalButton: {
+    borderRadius: 5,
   },
 });

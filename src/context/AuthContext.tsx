@@ -40,6 +40,7 @@ type User = {
   updatedAt: string;
   referralCode: string;
   id: string;
+  profileImage?:string
 };
 
 interface credentials {

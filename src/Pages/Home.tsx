@@ -327,30 +327,7 @@ const Home = () => {
     observeButton.disconnect();
   }
 
- const resultContainer = document.getElementById('free_play_result');
-  
-  if (resultContainer) {
-    const btc = document.querySelector('#winnings')?.textContent.trim() || '';
-    const tickets = document.querySelector('#fp_lottery_tickets_won')?.textContent.trim() || '0';
-    const rewards = document.querySelector('#fp_reward_points_won')?.textContent.trim() || '0';
-
-    // window.ReactNativeWebView.postMessage(JSON.stringify({
-    //   type: 'ROLL_RESULT',
-    //   btc,
-    //   tickets,
-    //   rewards,
-    //   message: 'Roll result found without observer'
-    // }));
-  }else{
-  // window.ReactNativeWebView.postMessage(JSON.stringify({
-  //     type: 'ROLL_RESULT_NOTFOUND',
-  //     btc,
-  //     tickets,
-  //     rewards,
-  //     message: 'Roll result found without observer'
-  //   }));
-  }
-
+ 
   return true;
 })();
 `;
@@ -534,46 +511,58 @@ const Home = () => {
 
       let lastCaptchaValue = captchaField.value || '';
 
+      // Function to check if button is visible and enabled
+      function isButtonClickable(button) {
+        if (!button) return false;
+        
+        // Check computed style for display property
+        const style = window.getComputedStyle(button);
+        const isVisible = style.display !== 'none';
+        const isEnabled = !button.disabled;
+        
+        return isVisible && isEnabled;
+      }
+
       // Function to try clicking the roll button
       function tryClickRollButton() {
         const button = document.querySelector('#free_play_form_button');
-        if (button && !button.disabled) {
+        
+        if (isButtonClickable(button)) {
           button.click();
           window.ReactNativeWebView.postMessage(JSON.stringify({
             type: 'ROLL_CLICKED',
             message: 'Roll button clicked after captcha filled'
           }));
 
+          // Check the winning results
+          setTimeout(() => {
+            const resultContainer = document.getElementById('free_play_result');
+            if (resultContainer) {
+              const btc = document.querySelector('#winnings')?.textContent.trim() || '';
+              const tickets = document.querySelector('#fp_lottery_tickets_won')?.textContent.trim() || '0';
+              const rewards = document.querySelector('#fp_reward_points_won')?.textContent.trim() || '0';
 
-          //  check the winning results
-              setTimeout(() => {
-                // ROLL RESULT CHECK (safe)
-                      const resultContainer = document.getElementById('free_play_result');
-
-                      if (resultContainer) {
-                        const btc = document.querySelector('#winnings')?.textContent.trim() || '';
-                        const tickets = document.querySelector('#fp_lottery_tickets_won')?.textContent.trim() || '0';
-                        const rewards = document.querySelector('#fp_reward_points_won')?.textContent.trim() || '0';
-
-                        window.ReactNativeWebView.postMessage(JSON.stringify({
-                          type: 'ROLL_RESULT',
-                          btc,
-                          tickets,
-                          rewards,
-                          message: 'Roll result found without observer'
-                        }));
-                      } else {
-                        window.ReactNativeWebView.postMessage(JSON.stringify({
-                          type: 'ROLL_RESULT_NOTFOUND',
-                          message: 'Roll result not yet available'
-                        }));
-                      }
+              window.ReactNativeWebView.postMessage(JSON.stringify({
+                type: 'ROLL_RESULT',
+                btc,
+                tickets,
+                rewards,
+                message: 'Roll result found without observer'
+              }));
+            } else {
+              window.ReactNativeWebView.postMessage(JSON.stringify({
+                type: 'ROLL_RESULT_NOTFOUND',
+                message: 'Roll result not yet available'
+              }));
+            }
           }, 1200);
-
         } else {
+          const reason = !button ? 'Button not found' : 
+                       (window.getComputedStyle(button).display === 'none' ? 'Button is hidden' : 'Button is disabled');
+          
           window.ReactNativeWebView.postMessage(JSON.stringify({
             type: 'ROLL_NOT_READY',
-            message: 'Roll button not found or disabled'
+            message: reason
           }));
         }
       }
@@ -617,7 +606,7 @@ const Home = () => {
   `;
 
     webViewRef.current?.injectJavaScript(script);
-  };
+};
 
   const onMessages = (event: any) => {
     const data = JSON.parse(event.nativeEvent.data);

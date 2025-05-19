@@ -1,20 +1,39 @@
-import { StyleSheet, View, ScrollView, Linking, FlatList, Share } from 'react-native';
-import React, { useEffect, useState } from 'react';
+import {
+  StyleSheet,
+  View,
+  ScrollView,
+  Linking,
+  FlatList,
+  Share,
+  RefreshControl,
+} from 'react-native';
+import React, {useEffect, useState} from 'react';
 import useAxios from '../../hooks/useAxios';
-import { useIsFocused } from '@react-navigation/native';
-import { Card, Title, Paragraph, Button, Text, useTheme, Snackbar, List, Avatar } from 'react-native-paper';
+import {useIsFocused} from '@react-navigation/native';
+import {
+  Card,
+  Title,
+  Paragraph,
+  Button,
+  Text,
+  useTheme,
+  Snackbar,
+  List,
+  Avatar,
+} from 'react-native-paper';
 import Clipboard from '@react-native-clipboard/clipboard';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { useAuth } from '../../hooks/useAuth';
+import {useAuth} from '../../hooks/useAuth';
 
 export default function Refer() {
-  const { fetchData } = useAxios();
+  const {fetchData} = useAxios();
   const isFocused = useIsFocused();
   const theme = useTheme();
   const [referralHistory, setReferralHistory] = useState([]);
   const [visibleSnackbar, setVisibleSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
-  const { userDetails } = useAuth();
+  const [refreshing, setRefreshing] = useState<boolean>(false);
+  const {userDetails} = useAuth();
 
   const myReferral = async () => {
     try {
@@ -42,7 +61,7 @@ export default function Refer() {
     const message = `Join using my referral code: ${userDetails.referralCode}\n\nGet bonus rewards when you sign up!`;
     try {
       await Share.share({
-        message: message
+        message: message,
       });
     } catch (error) {
       setSnackbarMessage(error.message);
@@ -56,45 +75,69 @@ export default function Refer() {
     }
   }, [isFocused]);
 
-  const renderHistoryItem = ({ item }) => (
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await myReferral();
+    setRefreshing(false);
+  };
+
+  const renderHistoryItem = ({item}) => (
     <List.Item
       title={item.email || 'New User'}
       description={new Date(item.createdAt).toLocaleDateString()}
       left={props => <List.Icon {...props} icon="account-plus" />}
-      right={props => <Text {...props} style={styles.rewardText}>+{item.reward || '0'} points</Text>}
+      right={props => (
+        <Text {...props} style={styles.rewardText}>
+          +{item.reward || '0'} points
+        </Text>
+      )}
     />
   );
 
   return (
-    <ScrollView contentContainerStyle={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <ScrollView
+      contentContainerStyle={[
+        styles.container,
+        {backgroundColor: theme.colors.background},
+      ]}
+      refreshControl={
+        <RefreshControl onRefresh={handleRefresh} refreshing={refreshing} />
+      }>
       {/* User Profile Card */}
       <Card style={styles.card}>
         <Card.Content>
           <View style={styles.profileHeader}>
-            <Avatar.Text 
-              size={64} 
-              label={userDetails?.email?.charAt(0).toUpperCase() || 'U'} 
+            <Avatar.Text
+              size={64}
+              label={userDetails?.email?.charAt(0).toUpperCase() || 'U'}
               style={styles.avatar}
             />
             <View style={styles.profileInfo}>
               <Title style={styles.email}>{userDetails?.email}</Title>
               <Text style={styles.memberSince}>
-                Member since: {new Date(userDetails?.createdAt).toLocaleDateString()}
+                Member since:{' '}
+                {new Date(userDetails?.createdAt).toLocaleDateString()}
               </Text>
             </View>
           </View>
-          
+
           <View style={styles.statsContainer}>
             <View style={styles.statItem}>
-              <Text style={styles.statValue}>{userDetails?.rollCount || 0}</Text>
+              <Text style={styles.statValue}>
+                {userDetails?.rollCount || 0}
+              </Text>
               <Text style={styles.statLabel}>Rolls</Text>
             </View>
             <View style={styles.statItem}>
-              <Text style={styles.statValue}>{userDetails?.referralCount || 0}</Text>
+              <Text style={styles.statValue}>
+                {userDetails?.referralCount || 0}
+              </Text>
               <Text style={styles.statLabel}>Referrals</Text>
             </View>
             <View style={styles.statItem}>
-              <Text style={styles.statValue}>{userDetails?.wallet?.balance || '0.00000000'}</Text>
+              <Text style={styles.statValue}>
+                {userDetails?.wallet?.balance || '0.00000000'}
+              </Text>
               <Text style={styles.statLabel}>BTC Balance</Text>
             </View>
           </View>
@@ -106,19 +149,25 @@ export default function Refer() {
         <Card.Content>
           <Title style={styles.title}>Refer & Earn</Title>
           <Paragraph style={styles.description}>
-            Invite friends and earn rewards when they join using your referral code.
+            Invite friends and earn rewards when they join using your referral
+            code.
           </Paragraph>
 
           <View style={styles.referralContainer}>
             <Text style={styles.label}>Your Referral Code:</Text>
             <View style={styles.codeContainer}>
-              <Text style={styles.code}>{userDetails?.referralCode || '------'}</Text>
-              <Button 
-                mode="text" 
+              <Text style={styles.code}>
+                {userDetails?.referralCode || '------'}
+              </Text>
+              <Button
+                mode="text"
                 onPress={copyToClipboard}
-                style={styles.copyButton}
-              >
-                <Icon name="content-copy" size={20} color={theme.colors.primary} />
+                style={styles.copyButton}>
+                <Icon
+                  name="content-copy"
+                  size={20}
+                  color={theme.colors.primary}
+                />
               </Button>
             </View>
           </View>
@@ -126,25 +175,38 @@ export default function Refer() {
           <View style={styles.stepsContainer}>
             <Title style={styles.howItWorks}>How It Works</Title>
             <View style={styles.step}>
-              <Icon name="numeric-1-circle" size={24} color={theme.colors.primary} />
-              <Text style={styles.stepText}>Share your referral code with friends</Text>
+              <Icon
+                name="numeric-1-circle"
+                size={24}
+                color={theme.colors.primary}
+              />
+              <Text style={styles.stepText}>
+                Share your referral code with friends
+              </Text>
             </View>
             <View style={styles.step}>
-              <Icon name="numeric-2-circle" size={24} color={theme.colors.primary} />
+              <Icon
+                name="numeric-2-circle"
+                size={24}
+                color={theme.colors.primary}
+              />
               <Text style={styles.stepText}>They sign up using your code</Text>
             </View>
             <View style={styles.step}>
-              <Icon name="numeric-3-circle" size={24} color={theme.colors.primary} />
+              <Icon
+                name="numeric-3-circle"
+                size={24}
+                color={theme.colors.primary}
+              />
               <Text style={styles.stepText}>You both earn rewards!</Text>
             </View>
           </View>
 
-          <Button 
-            mode="contained" 
+          <Button
+            mode="contained"
             onPress={onShare}
             style={styles.shareButton}
-            icon="share-variant"
-          >
+            icon="share-variant">
             Share Your Code
           </Button>
         </Card.Content>
@@ -158,12 +220,16 @@ export default function Refer() {
             <FlatList
               data={referralHistory}
               renderItem={renderHistoryItem}
-              keyExtractor={(item) => item.id}
+              keyExtractor={item => item.id}
               scrollEnabled={false}
             />
           ) : (
             <View style={styles.emptyHistory}>
-              <Icon name="information-outline" size={24} color={theme.colors.text} />
+              <Icon
+                name="information-outline"
+                size={24}
+                color={theme.colors.text}
+              />
               <Text style={styles.emptyText}>No referrals yet</Text>
             </View>
           )}
@@ -174,8 +240,7 @@ export default function Refer() {
         visible={visibleSnackbar}
         onDismiss={() => setVisibleSnackbar(false)}
         duration={3000}
-        style={{ backgroundColor: theme.colors.primary }}
-      >
+        style={{backgroundColor: theme.colors.primary}}>
         {snackbarMessage}
       </Snackbar>
     </ScrollView>

@@ -9,6 +9,7 @@ interface FetchDataProps {
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
   data?: any;
   params?: any;
+  headers?:any
 }
 
 interface AxiosResponse<T = any> {
@@ -26,13 +27,17 @@ interface errorRes<T = any> {
   }[];
 }
 
+
+export const baseUrl =`https://backend.freebit.fzeetechz.com/api/v1`;
+export const imgUrl = `https://backend.freebit.fzeetechz.com`
+
 export default function useAxios() {
   const [error, setError] = useState<errorRes>();
   const {token} = useAuth();
   const {showLoader, hideLoader} = useLoader();
 
   const instance = axios.create({
-    baseURL: 'https://backend.freebit.fzeetechz.com/api/v1',
+    baseURL: baseUrl,
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
@@ -44,6 +49,7 @@ export default function useAxios() {
     method = 'GET',
     data = null,
     params = null,
+    headers = {}
   }: FetchDataProps): Promise<AxiosResponse<T> | undefined> => {
     setError(null);
     showLoader();
@@ -53,6 +59,7 @@ export default function useAxios() {
       method,
       data,
       params,
+      headers
     };
 
     try {
