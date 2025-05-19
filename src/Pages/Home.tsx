@@ -62,7 +62,7 @@ const Home = () => {
   const webViewRef = useRef(null);
   const {fetchData} = useAxios();
   const {shouldLogout, clearLogoutFlag} = useWebView();
-  const p = useBgFetch();
+  // const p = useBgFetch();
 
   const [webViewData, setWebViewData] = useState(null);
   const [webViewError, setWebViewError] = useState(null);
@@ -134,16 +134,16 @@ const Home = () => {
     };
   }, []);
 
-  const SaveRollhistotyinDb = async (btc:any) => {
+  const SaveRollhistotyinDb = async (btc: any) => {
     try {
       const res = await fetchData({
         url: `/user/roll/new`,
         method: 'POST',
         data: {
-          btc:btc,
+          btc: btc,
         },
       });
-      console.log(res)
+      console.log(res);
     } catch (error) {
       console.log(error);
     }
@@ -261,10 +261,104 @@ const Home = () => {
     message: isSignUpOrLoginForm ? 'Signup or LoginForm' : 'Signup not LoginForm'
   }));
 
+  // ========== ENHANCED MODAL OBSERVER ========== //
+  function setupModalObserver() {
+    const modal = document.getElementById('myModal22');
+    if (!modal) {
+      window.ReactNativeWebView.postMessage(JSON.stringify({
+        type: 'MODAL_NOT_FOUND',
+        message: 'Modal not found in DOM'
+      }));
+      return;
+    }
+
+    // Function to check for close button and report modal state
+    function reportModalState() {
+      const styles = window.getComputedStyle(modal);
+      const closeButton = modal.querySelector('.close-reveal-modal');
+      
+      const report = {
+        type: 'MODAL_STATE_UPDATE',
+        display: styles.display,
+        visibility: styles.visibility,
+        hasOpenClass: modal.classList.contains('open'),
+        hasCloseButton: !!closeButton,
+        closeButtonHtml: closeButton ? closeButton.outerHTML : null,
+        // modalHtml: modal.outerHTML,
+        message: 'Current modal state'
+      };
+
+      window.ReactNativeWebView.postMessage(JSON.stringify(report));
+
+      // If modal is visible and has close button, attempt to close it
+      if (styles.display === 'block' && 
+          styles.visibility === 'visible' &&
+          closeButton) {
+        closeButton.click();
+        window.ReactNativeWebView.postMessage(JSON.stringify({
+          type: 'MODAL_CLOSE_ATTEMPTED',
+          message: 'Attempted to close modal via click'
+        }));
+      }
+    }
+
+    // Initial report
+    reportModalState();
+
+    // Set up observer for modal and its contents
+    const observer = new MutationObserver(function(mutations) {
+      let shouldReport = false;
+      
+      mutations.forEach(function(mutation) {
+        // Check for attribute changes on modal
+        if (mutation.target === modal && 
+            mutation.type === 'attributes' && 
+            (mutation.attributeName === 'style' || mutation.attributeName === 'class')) {
+          shouldReport = true;
+        }
+        
+        // Check for added/removed close button
+        if (mutation.type === 'childList') {
+          const addedCloseButton = Array.from(mutation.addedNodes).some(node => 
+            node.classList && node.classList.contains('close-reveal-modal'));
+          
+          const removedCloseButton = Array.from(mutation.removedNodes).some(node => 
+            node.classList && node.classList.contains('close-reveal-modal'));
+            
+          if (addedCloseButton || removedCloseButton) {
+            shouldReport = true;
+          }
+        }
+      });
+
+      if (shouldReport) {
+        reportModalState();
+      }
+    });
+
+    // Observe modal and its subtree for changes
+    observer.observe(modal, {
+      attributes: true,
+      attributeFilter: ['style', 'class'],
+      childList: true,
+      subtree: true
+    });
+
+    window.ReactNativeWebView.postMessage(JSON.stringify({
+      type: 'MODAL_OBSERVER_ACTIVE',
+      message: 'Now watching modal and close button'
+    }));
+  }
+
+  // Start observing modal (if exists)
+  setupModalObserver();
+  // ========== END ENHANCED CODE ========== //
+
+  // [Rest of your existing timer and button observation code...]
   // Timer extraction helper
   function extractAndPostTimer() {
     const timerElement = document.getElementById('time_remaining');
-     const balanceElement = document.querySelector('#balance');
+    const balanceElement = document.querySelector('#balance');
     if (!timerElement) return;
 
     const amountElements = timerElement.querySelectorAll('.countdown_amount');
@@ -275,7 +369,7 @@ const Home = () => {
       type: 'TIMER_INITIAL',
       minutes: minutes,
       seconds: seconds,
-      balance:balanceElement ? balanceElement.innerText : null,
+      balance: balanceElement ? balanceElement.innerText : null,
       message: 'Timer initially detected'
     }));
   }
@@ -285,7 +379,7 @@ const Home = () => {
     const timerContainer = document.getElementById('time_remaining');
     if (timerContainer) {
       extractAndPostTimer();
-      observeTimerContainer.disconnect(); // Stop after first detection
+      observeTimerContainer.disconnect();
     }
   });
 
@@ -294,13 +388,12 @@ const Home = () => {
     subtree: true,
   });
 
-  // Check if timer already exists at load time
   if (document.getElementById('time_remaining')) {
     extractAndPostTimer();
-    observeTimerContainer.disconnect(); // Already present, no need to observe
+    observeTimerContainer.disconnect();
   }
 
-  // Observe DOM for when #free_play_form_button becomes available
+  // Button observer
   const observeButton = new MutationObserver(() => {
     const button = document.querySelector('#free_play_form_button');
     if (button) {
@@ -317,7 +410,6 @@ const Home = () => {
     subtree: true
   });
 
-  // Check if button already exists at load time
   const existingButton = document.querySelector('#free_play_form_button');
   if (existingButton) {
     window.ReactNativeWebView.postMessage(JSON.stringify({
@@ -327,7 +419,6 @@ const Home = () => {
     observeButton.disconnect();
   }
 
- 
   return true;
 })();
 `;
@@ -606,7 +697,7 @@ const Home = () => {
   `;
 
     webViewRef.current?.injectJavaScript(script);
-};
+  };
 
   const onMessages = (event: any) => {
     const data = JSON.parse(event.nativeEvent.data);
@@ -631,13 +722,81 @@ const Home = () => {
         break;
 
       case 'ROLL_RESULT':
-        if(data.btc){
+        if (data.btc) {
+          SaveRollhistotyinDb(data.btc);
+        }
+        break;
 
-          SaveRollhistotyinDb(data.btc)
+      case 'MODAL_STATE_UPDATE':
+        console.log(data);
+        if (
+          data.display !== 'none' ||
+          data.visibility !== 'hidden' ||
+          data.hasOpenClass
+        ) {
+          hideModalIfOpen(); // Only hide if modal is open
         }
         break;
     }
   };
+
+const hideModalIfOpen = () => {
+  const hideScript = `
+  (function() {
+    const modal = document.querySelector('#myModal22');
+    if (!modal) {
+      window.ReactNativeWebView.postMessage(JSON.stringify({
+        type: 'MODAL_HIDE_FAILED',
+        message: 'Modal element not found'
+      }));
+      return true;
+    }
+
+    // Check if modal is currently open/visible
+    const styles = window.getComputedStyle(modal);
+    const isVisible = styles.display !== 'none' && 
+                     styles.visibility !== 'hidden' &&
+                     (modal.classList.contains('open') || 
+                      styles.opacity > 0);
+    
+    if (isVisible) {
+      // Force hide the modal with important flags
+      const closeButton = modal.querySelector('.close-reveal-modal');
+       if(closeButton) {
+       closeButton.click();
+       
+       }
+
+      modal.classList.remove('open', 'active', 'show');
+      
+      window.ReactNativeWebView.postMessage(JSON.stringify({
+        type: 'MODAL_HIDE_SUCCESS',
+        message: 'Force-closed open modal',
+        previousState: {
+          display: styles.display,
+          visibility: styles.visibility,
+          opacity: styles.opacity,
+          hadOpenClass: modal.classList.contains('open')
+        }
+      }));
+    } else {
+      window.ReactNativeWebView.postMessage(JSON.stringify({
+        type: 'MODAL_ALREADY_HIDDEN',
+        message: 'Modal was already hidden',
+        currentState: {
+          display: styles.display,
+          visibility: styles.visibility,
+          opacity: styles.opacity,
+          hasOpenClass: modal.classList.contains('open')
+        }
+      }));
+    }
+    true;
+  })();
+  `;
+  
+  webViewRef.current?.injectJavaScript(hideScript);
+};
 
   return (
     <>
