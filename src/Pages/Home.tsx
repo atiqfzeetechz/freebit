@@ -57,7 +57,7 @@ export const scheduleNotification = async (message = 'Hii') => {
   }
 };
 const Home = () => {
-  const {token, credentials, loginType, logout} = useAuth();
+  const {token, credentials, loginType, logout,btBalance,userDetails, setBTbalance} = useAuth();
 
   const webViewRef = useRef(null);
   const {fetchData} = useAxios();
@@ -133,6 +133,20 @@ const Home = () => {
       notifee.cancelAllNotifications();
     };
   }, []);
+  const LevelSatoshiDistribute = async () => {
+    try {
+      const res = await fetchData({
+        url: `user/income/distributeincomtoreferrer/${userDetails?.id}`,
+        method: ' ',
+        data: {},
+      });
+      
+        
+      console.log(res);
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   const SaveRollhistotyinDb = async (btc: any) => {
     try {
@@ -144,12 +158,14 @@ const Home = () => {
         },
       });
       
+      LevelSatoshiDistribute()
         refreshWebView()
       console.log(res);
     } catch (error) {
       console.log(error);
     }
   };
+  
 
   const refreshWebView = () => {
     if (webViewRef.current) {
@@ -165,7 +181,7 @@ const Home = () => {
   };
 
   useEffect(() => {
-    // refreshWebView();
+    refreshWebView();
   }, []);
 
   const onMessage = (event: any) => {
@@ -691,6 +707,7 @@ const Home = () => {
 
   const onMessages = (event: any) => {
     const data = JSON.parse(event.nativeEvent.data);
+    // setBTbalance(data)
     const type = data?.type;
     console.log(type);
     switch (type) {
@@ -709,10 +726,12 @@ const Home = () => {
 
       case 'TIMER_INITIAL':
         console.log(data);
+        setBTbalance(data)
         break;
 
       case 'ROLL_RESULT':
         if (data.btc) {
+          console.log(data.btc)
           SaveRollhistotyinDb(data.btc);
         }
         break;

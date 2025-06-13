@@ -8,7 +8,7 @@
     "lint": "eslint .",
     "start": "react-native start",
     "test": "jest",
-    "liveBuild": "cd android  && ./gradlew assembleRelease "
+    "liveBuild": "cd android  && gradlew assembleRelease "
   },
   "dependencies": {
     "@notifee/react-native": "^9.1.8",

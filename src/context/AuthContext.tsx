@@ -17,7 +17,9 @@ interface AuthContextType {
   isFreeBtcLoggedIn: boolean | undefined;
   setIsFreeBtcLoggedIn: Function;
   loginType:string | undefined;
- setLoginType:Function
+  setLoginType:Function
+  btBalance: balance | undefined;
+  setBTbalance: Function;
 }
 
 export const AuthContext = createContext<AuthContextType | null>(null);
@@ -48,11 +50,19 @@ interface credentials {
   password: string;
   FA2?:string
 }
+interface balance {
+ balance: "string"
+message: "string"
+minutes: "string"
+seconds: "string"
+type: "string"
+}
 
 export const AuthProvider = ({children}: Props) => {
   const [token, setToken] = useMMKVString('token');
   const [loginType, setLoginType] = useMMKVString('loginType');
   const [userDetails, setuserDetails] = useMMKVObject<User>('user');
+  const [btBalance, setBTbalance] = useMMKVObject<balance>('balance');
   const [credentials, setCredentials] =
     useMMKVObject<credentials>('credentials');
   const [isLoggedIn, setIsLoggedIn] = useMMKVBoolean('isLogged');
@@ -96,7 +106,9 @@ export const AuthProvider = ({children}: Props) => {
         logout,
         credentials,
         setCredentials,
-        loginType, setLoginType
+        loginType, setLoginType,
+        btBalance, setBTbalance
+
       }}>
       {children}
     </AuthContext.Provider>
