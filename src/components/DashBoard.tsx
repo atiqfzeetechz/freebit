@@ -1,8 +1,8 @@
-import {StyleSheet, View, FlatList, Dimensions} from 'react-native';
+import {StyleSheet, View, FlatList, Dimensions, ScrollView, SafeAreaView, StatusBar, Alert } from 'react-native';
 import React, {useEffect, useState} from 'react';
 import useAxios from '../hooks/useAxios';
 import {useAuth} from '../hooks/useAuth';
-import {Card, Text, useTheme, Avatar} from 'react-native-paper';
+import {Card, Text, useTheme, Avatar, IconButton} from 'react-native-paper';
 import {hp} from '../helper/hpwp';
 
 export default function DashBoard({webViewData}: any) {
@@ -127,7 +127,10 @@ export default function DashBoard({webViewData}: any) {
       isTimer: true
     },
   ];
-
+function syncReCallwebView(){
+  // showLoader()
+  // setSyncWebViewclick(SyncWebViewClick + 1)
+}
   // Calculate card width based on screen width
   const screenWidth = Dimensions.get('window').width;
   const cardWidth = (screenWidth - 48) / 2;
@@ -157,7 +160,21 @@ export default function DashBoard({webViewData}: any) {
   );
 
   return (
+        <SafeAreaView style={styles.safeArea}>
+      {/* <StatusBar backgroundColor="#4e91fc" barStyle="light-content" /> */}
+
+      {/* Header */}
+      {/* <View style={styles.header}>
+        <View style={styles.topRow}>
+        <Text style={styles.headerText}>Sync Details</Text>
+        <Text onPress={syncReCallwebView} style={styles.status}><IconButton
+  icon={'sync'}
+  /></Text>
+      </View>
+        <Text style={styles.headerText}>Sync Details</Text>
+      </View> */}
     <View style={styles.container}>
+
       {/* Grid Cards */}
       <FlatList
         data={cardData}
@@ -170,6 +187,7 @@ export default function DashBoard({webViewData}: any) {
         extraData={countdown} // Re-render when countdown changes
       />
     </View>
+    </SafeAreaView>
   );
 }
 
@@ -180,6 +198,30 @@ const styles = StyleSheet.create({
     paddingTop: hp(5),
     marginTop:hp(5)
     
+  },
+    safeArea: {
+    flex: 1,
+    backgroundColor: '#f2f4f8',
+  },
+    header: {
+    backgroundColor: '#fff',
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    elevation: 4,
+  },
+  headerText: {
+    color: '#000',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+    status: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: 'green',
+  },
+    topRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
   },
   listContent: {
     paddingBottom: 16,

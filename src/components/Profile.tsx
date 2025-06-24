@@ -17,6 +17,7 @@ import {
 import useTheme from '../hooks/useTheme';
 import {wp} from '../helper/hpwp';
 import { imageFullUrl } from '../utils/urlConvertor';
+import { useNavigation } from '@react-navigation/native';
 
 export default function UserProfile() {
   const {fetchData} = useAxios();
@@ -25,7 +26,7 @@ export default function UserProfile() {
   const {colors} = useTheme();
   const [avatarSource, setAvatarSource] = useState(null);
   const [visible, setVisible] = useState(false);
-
+const navigation = useNavigation();
   const getMe = async () => {
     try {
       const {data} = await fetchData({
@@ -196,7 +197,14 @@ export default function UserProfile() {
           </View>
         </Card.Content>
       </Card>
-
+        <Card style={styles.card} onPress={() => navigation.navigate('Withdrawal')}>
+        <Card.Title
+          title="withdrawal"
+          titleVariant="titleMedium"
+          left={props => <IconButton {...props} icon="cash" />}
+        />
+        
+      </Card>
       {/* Account Details Card */}
       <Card style={styles.card}>
         <Card.Title

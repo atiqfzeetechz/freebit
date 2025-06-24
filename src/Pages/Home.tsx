@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {
   StyleSheet,
   View,
@@ -61,10 +61,11 @@ const Home = () => {
 
   const webViewRef = useRef(null);
   const {fetchData} = useAxios();
-  const {shouldLogout, clearLogoutFlag} = useWebView();
+  const {shouldLogout, clearLogoutFlag,SyncWebViewClick, setSyncWebViewclick} = useWebView();
+ 
   // const p = useBgFetch();
 
-  const [webViewData, setWebViewData] = useState(null);
+  const [webViewData, setWebViewData] = useState(null);//make this state to gloable 
   const [webViewError, setWebViewError] = useState(null);
 
   const [referrerCode] = useState(47131415);
@@ -137,7 +138,7 @@ const Home = () => {
     try {
       const res = await fetchData({
         url: `user/income/distributeincomtoreferrer/${userDetails?.id}`,
-        method: ' ',
+        method: 'POST',
         data: {},
       });
       
@@ -180,9 +181,18 @@ const Home = () => {
     }
   };
 
+  const memoizedFn = useCallback(() => {
+    console.log("Function logic runs");
+    // your original SyncWebViewClick logic here
+    refreshWebView()
+  }, [SyncWebViewClick]); // add dependencies here if needed
+
+
   useEffect(() => {
-    refreshWebView();
-  }, []);
+    console.log("call useEffect bar bar bar bar bar abr ")
+    // refreshWebView();
+    memoizedFn()
+  }, [memoizedFn]);
 
   const onMessage = (event: any) => {
     try {
@@ -268,6 +278,8 @@ const Home = () => {
 
   const handleWebViewLoad = () => {
     // WebView loaded handler if needed
+    
+    
   };
 
   const injectedJavaScript = `
@@ -853,7 +865,7 @@ const hideModalIfOpen = () => {
 const styles = StyleSheet.create({
   hiddenWebViewContainer: {
     flex: 1,
-    marginTop: hp(5),
+    // marginTop: hp(5),
     // position: 'absolute',
     zIndex: 2,
   },

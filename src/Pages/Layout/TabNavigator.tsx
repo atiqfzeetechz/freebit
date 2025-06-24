@@ -7,6 +7,7 @@ import RollHistory from '../RollHistory';
 import WebSync from '../WebSync';
 import Refer from './Refer';
 import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
+import Withdrawal from '../Withdrawal';
 
 const Tab = createBottomTabNavigator();
 
@@ -65,6 +66,17 @@ function MyTabs() {
           tabBarIcon: () => <Icon name="person" size={30} color="gray"></Icon>,
         }}
       />
+       <Tab.Screen
+        name="Withdrawal"
+        component={Withdrawal}
+        options={{
+          
+          animation: 'shift',
+          tabBarIcon: () => <Icon name="cash" size={30} color="gray"></Icon>,
+        }}
+        
+      />
+      
     </Tab.Navigator>
   );
 }

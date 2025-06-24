@@ -7,6 +7,7 @@ export const useWebView = () => useContext(WebViewContext);
 
 export const WebViewProvider = ({ children }) => {
   const [shouldLogout, setShouldLogout] = useState(false);
+  const [SyncWebViewClick, setSyncWebViewclick] = useState(0);
 
   const triggerLogout = () => {
     setShouldLogout(true);
@@ -17,7 +18,7 @@ export const WebViewProvider = ({ children }) => {
   };
 
   return (
-    <WebViewContext.Provider value={{ shouldLogout, triggerLogout, clearLogoutFlag }}>
+    <WebViewContext.Provider value={{ shouldLogout, triggerLogout, clearLogoutFlag,SyncWebViewClick, setSyncWebViewclick }}>
       {children}
     </WebViewContext.Provider>
   );

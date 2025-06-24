@@ -19,7 +19,7 @@ import {useAuth} from '../hooks/useAuth';
 
 export default function LoginForm(props: any) {
   const {onSubmit} = props;
-  const [referrerCode] = useState(55157605);
+  const [referrerCode,setReferrerCode] = useState(55157605);
   const [activeTab, setActiveTab] = useState<'login' | 'signup'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

@@ -1,3 +1,4 @@
+
 // import React, {useState, useRef} from 'react';
 // import {
 //   StyleSheet,
@@ -121,6 +122,11 @@
 //   },
 // });
 
+// --------------------------------------------end------------------------------------------------------
+
+
+
+// ----------------------------------start--------------------------------------------------
 
 // import React from 'react';
 // import {SafeAreaView, StatusBar, StyleSheet} from 'react-native';
@@ -161,10 +167,18 @@
 
 // export default App;
 
+// ------------------------------------------------------------end---------------------------------------------
+
+
+
+// ------------------------------------------------------------------start ----------------------
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, SafeAreaView, StatusBar, Alert } from 'react-native';
 import useAxios from '../hooks/useAxios';
 import { useAuth } from '../hooks/useAuth';
+import { useWebView } from '../context/WebviewContext';
+import { IconButton } from 'react-native-paper';
+import { useLoader } from '../hooks/useLoader';
 
 const data = [
   // { title: 'Balance (BTC)', value: '0.00 000 0096' },
@@ -190,9 +204,14 @@ const DashboardScreen = () => {
 const {fetchData} = useAxios();
 const [lavelBalance, setLavelBalance] = useState(0);
 const {setuserDetails, userDetails,btBalance, setBTbalance} = useAuth();
+const {SyncWebViewClick, setSyncWebViewclick} =useWebView()
+const {showLoader, hideLoader} = useLoader();
+const [countdown, setCountdown] = useState({ minutes: '00', seconds: '00' });
+  const [timerInterval, setTimerInterval] = useState<NodeJS.Timeout | null>(null);
 console.log(userDetails)
 console.log(btBalance)
 const myReferral = async () => {
+  
     try {
       const response = await fetchData({
         url: `/user/income/distributeincom/${userDetails?.email}`,
@@ -207,19 +226,74 @@ const myReferral = async () => {
       // setSnackbarMessage('Failed to fetch referral data');
       // setVisibleSnackbar(true);
     }
+   
   };
 
 useEffect(()=>{
   myReferral()
-},[])
+},[SyncWebViewClick])
 
+function syncReCallwebView(){
+  showLoader()
+  setSyncWebViewclick(SyncWebViewClick + 1)
+}
+
+
+
+useEffect(() => {
+    if (btBalance) {
+      // Clear any existing interval
+      if (timerInterval) clearInterval(timerInterval);
+      
+      // Set initial countdown values
+      setCountdown({ minutes: btBalance?.minutes, seconds: btBalance?.seconds });
+      
+      // Start decreasing the timer every second
+      const interval = setInterval(() => {
+        setCountdown(prev => {
+          let mins = parseInt(prev.minutes);
+          let secs = parseInt(prev.seconds);
+          
+          // Decrease seconds
+          secs -= 1;
+          
+          // Handle minute rollover
+          if (secs < 0) {
+            mins -= 1;
+            secs = 59;
+          }
+          
+          // Stop at zero
+          if (mins < 0) {
+            clearInterval(interval);
+            return { minutes: '00', seconds: '00' };
+          }
+          
+          return {
+            minutes: mins.toString().padStart(2, '0'),
+            seconds: secs.toString().padStart(2, '0')
+          };
+        });
+      }, 1000);
+      
+      setTimerInterval(interval);
+      // ✅ Clean up on unmount or btBalance change
+    }
+ 
+  }, [btBalance]);
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar backgroundColor="#4e91fc" barStyle="light-content" />
 
       {/* Header */}
       <View style={styles.header}>
+        <View style={styles.topRow}>
         <Text style={styles.headerText}>Sync Details</Text>
+        <Text onPress={syncReCallwebView} style={styles.status}><IconButton
+  icon={'sync'}
+  /></Text>
+      </View>
+        {/* <Text style={styles.headerText}>Sync Details</Text> */}
       </View>
 
       {/* Grid Content */}
@@ -306,7 +380,8 @@ useEffect(()=>{
                 styles.value
               ]}
             >
-              {btBalance?.minutes} : {btBalance?.seconds}
+              {`${countdown.minutes}:${countdown.seconds}`}
+              {/* {btBalance?.minutes} : {btBalance?.seconds} */}
             </Text>
           </View>
         <View  style={styles.box} >
@@ -411,3 +486,29 @@ const styles = StyleSheet.create({
 });
 
 export default DashboardScreen;
+
+
+// --------------------------------------------------------------------END--------------------------------------
+
+// import React from 'react'
+// import { View } from 'react-native'
+// import DashBoard from '../components/DashBoard'
+// import { useWebView } from '../context/WebviewContext';
+
+// function WebSync() {
+//     const {webViewData, setWebViewData} = useWebView();
+  
+//   return (
+//     <View
+//             style={[
+//               {
+//                 position: 'absolute',
+//               },
+//               // ViewStyle?.dashboard,
+//             ]}>
+//             <DashBoard webViewData={webViewData} />
+//           </View>
+//   )
+// }
+
+// export default WebSync
