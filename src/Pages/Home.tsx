@@ -21,6 +21,7 @@ import {useWebView} from '../context/WebviewContext';
 import CookieManager from '@react-native-cookies/cookies';
 import {showNotification} from '../utils/Notify';
 import Toast from 'react-native-toast-message';
+import {useData} from '../hooks/useGlobalData';
 
 const formatDateTime = () => {
   const now = new Date();
@@ -56,16 +57,28 @@ export const scheduleNotification = async (message = 'Hii') => {
     console.log(error);
   }
 };
-const Home = () => {
-  const {token, credentials, loginType, logout,btBalance,userDetails, setBTbalance} = useAuth();
 
+const IS_DISABLED = false;
+const Home = () => {
+  const {
+    token,
+    credentials,
+    loginType,
+    logout,
+    btBalance,
+    userDetails,
+    setBTbalance,
+  } = useAuth();
+
+  const {stats, setStats} = useData();
   const webViewRef = useRef(null);
   const {fetchData} = useAxios();
-  const {shouldLogout, clearLogoutFlag,SyncWebViewClick, setSyncWebViewclick} = useWebView();
- 
+  const {shouldLogout, clearLogoutFlag, SyncWebViewClick, setSyncWebViewclick} =
+    useWebView();
+
   // const p = useBgFetch();
 
-  const [webViewData, setWebViewData] = useState(null);//make this state to gloable 
+  const [webViewData, setWebViewData] = useState(null); //make this state to gloable
   const [webViewError, setWebViewError] = useState(null);
 
   const [referrerCode] = useState(47131415);
@@ -87,7 +100,7 @@ const Home = () => {
         // Alert.alert('Permission Granted', 'Notification will appear in 1 minute');
         // scheduleNotification(` New Rolled ${Date.now().toLocaleString()}` )
       } else {
-        Alert.alert('Permission Denied', 'You will not receive notifications');
+        // Alert.alert('Permission Denied', 'You will not receive notifications');
       }
     } catch (err) {
       console.warn('Permission error:', err);
@@ -134,6 +147,7 @@ const Home = () => {
       notifee.cancelAllNotifications();
     };
   }, []);
+
   const LevelSatoshiDistribute = async () => {
     try {
       const res = await fetchData({
@@ -141,8 +155,7 @@ const Home = () => {
         method: 'POST',
         data: {},
       });
-      
-        
+
       console.log(res);
     } catch (error) {
       console.log(error);
@@ -158,15 +171,14 @@ const Home = () => {
           btc: btc,
         },
       });
-      
-      LevelSatoshiDistribute()
-        refreshWebView()
+
+      LevelSatoshiDistribute();
+      refreshWebView();
       console.log(res);
     } catch (error) {
       console.log(error);
     }
   };
-  
 
   const refreshWebView = () => {
     if (webViewRef.current) {
@@ -182,16 +194,15 @@ const Home = () => {
   };
 
   const memoizedFn = useCallback(() => {
-    console.log("Function logic runs");
+    console.log('Function logic runs');
     // your original SyncWebViewClick logic here
-    refreshWebView()
+    refreshWebView();
   }, [SyncWebViewClick]); // add dependencies here if needed
 
-
   useEffect(() => {
-    console.log("call useEffect bar bar bar bar bar abr ")
+    console.log('call useEffect bar bar bar bar bar abr ');
     // refreshWebView();
-    memoizedFn()
+    memoizedFn();
   }, [memoizedFn]);
 
   const onMessage = (event: any) => {
@@ -278,8 +289,6 @@ const Home = () => {
 
   const handleWebViewLoad = () => {
     // WebView loaded handler if needed
-    
-    
   };
 
   const injectedJavaScript = `
@@ -453,6 +462,41 @@ const Home = () => {
 })();
 `;
 
+  const disableLottery = () => {
+    console.log('disableLottery called');
+    const disableLotteryFn = `
+    (function() {
+      const checkbox = document.querySelector('#disable_lottery_checkbox');
+      
+      if (!checkbox) {
+       window.ReactNativeWebView.postMessage(JSON.stringify({
+          type: 'LOTTERY_CHECK_BOX',
+          message: 'Checkbox not found',
+          success: false
+      
+        }));
+      
+        return;
+      }
+      if (!checkbox.checked) {
+        checkbox.checked = true;
+        const event = new Event('change', { bubbles: true });
+        checkbox.dispatchEvent(event);
+      }
+         window.ReactNativeWebView.postMessage(JSON.stringify({
+          type: 'LOTTERY_CHECK_BOX',
+          message: 'Lottery Disabled',
+          success: true,
+          value: checkbox.checked 
+      
+        }));
+     
+    })();
+  `;
+
+    webViewRef.current?.injectJavaScript(disableLotteryFn);
+  };
+
   const loginandSignUp = () => {
     console.log(loginType);
     if (loginType === 'login') {
@@ -616,7 +660,7 @@ const Home = () => {
     }
   };
 
- const rollwithButton = () => {
+  const rollwithButton = () => {
     const script = `
     (function() {
       const captchaField = document.querySelector('[name="cf-turnstile-response"]');
@@ -717,6 +761,94 @@ const Home = () => {
     webViewRef.current?.injectJavaScript(script);
   };
 
+  const getMyRewardPoints = () => {
+    const getRewardsData = `
+    (function() {
+      const rewardPointsElement = document.querySelector('.user_reward_points');
+      const myLotteryTickets = document.querySelector('#user_lottery_tickets');
+
+      const data = {};
+      if (rewardPointsElement) {
+        data.points = rewardPointsElement.textContent.trim();
+      }
+      if (myLotteryTickets) {
+        data.tickets = myLotteryTickets.textContent.trim();
+      }
+
+      if (data.points || data.tickets) {
+        window.ReactNativeWebView.postMessage(JSON.stringify({
+          type: 'REWARD_POINTS',
+          message: 'Fetched available data.',
+          value: data
+        }));
+      } else {
+        window.ReactNativeWebView.postMessage(JSON.stringify({
+          type: 'ERROR',
+          message: 'No data found.'
+        }));
+      }
+    })();
+  `;
+
+    webViewRef.current?.injectJavaScript(getRewardsData);
+  };
+
+  const is2FAEnabled = () => {
+    const script = `
+    (function() {
+      function isVisible(el) {
+        if (!el) return false;
+
+        // Check visibility up the DOM tree
+        while (el) {
+          const style = window.getComputedStyle(el);
+          if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') {
+            return false;
+          }
+          el = el.parentElement;
+        }
+
+        return true;
+      }
+
+      const messageText = 'Please enter the code generated by your 2 factor authentication app and click the button below to disable 2 factor authentication.';
+
+      const p = Array.from(document.querySelectorAll('p')).find(p =>
+        p.textContent.trim().replace(/\\s+/g, ' ') === messageText
+      );
+
+      let status = 'UNKNOWN';
+      let parentStyles = null;
+
+      if (p && p.parentElement) {
+        const parent = p.parentElement;
+        const style = window.getComputedStyle(parent);
+
+        parentStyles = {
+          display: style.display,
+          visibility: style.visibility,
+          opacity: style.opacity,
+        };
+
+        const parentVisible = isVisible(parent);
+        status = parentVisible ? 'ENABLED' : 'DISABLED';
+      } else {
+        status = 'NOT_FOUND';
+      }
+
+      window.ReactNativeWebView.postMessage(JSON.stringify({
+        type: '2FA_STATUS_CHECK',
+        content: {
+          status,
+          parentStyles,
+        }
+      }));
+    })();
+  `;
+
+    webViewRef.current?.injectJavaScript(script);
+  };
+
   const onMessages = (event: any) => {
     const data = JSON.parse(event.nativeEvent.data);
     // setBTbalance(data)
@@ -725,6 +857,32 @@ const Home = () => {
     switch (type) {
       case 'signupFormAvail':
         loginandSignUp();
+        break;
+      case 'signupFormNotAvail':
+        disableLottery();
+        getMyRewardPoints();
+        is2FAEnabled();
+        // loginandSignUp();
+        break;
+
+      case 'REWARD_POINTS':
+        setStats(pre => ({
+          ...pre,
+          rewards: data.value.points,
+          tickets: data.value.tickets,
+        }));
+        console.log(data);
+        break;
+
+      case 'LOTTERY_CHECK_BOX':
+        setStats(pre => ({...pre, isLotteryDisbaled: data.value}));
+        console.log(data);
+        break;
+      case '2FA_STATUS_CHECK':
+        const is2FA = data?.content?.parentStyles?.display
+        const text =  is2FA=="none"? "DISABLED":"ENABLED"
+        setStats(pre => ({...pre, twoFaStatus: text}));
+        console.log(data);
         break;
 
       case 'TURNSTILE_TOKEN':
@@ -738,31 +896,31 @@ const Home = () => {
 
       case 'TIMER_INITIAL':
         console.log(data);
-        setBTbalance(data)
+        setBTbalance(data);
         break;
 
       case 'ROLL_RESULT':
         if (data.btc) {
-          console.log(data.btc)
+          console.log(data.btc);
           SaveRollhistotyinDb(data.btc);
         }
         break;
 
       case 'MODAL_STATE_UPDATE':
         console.log(data);
-        if (
-          data.display !== 'none' ||
-          data.visibility !== 'hidden' ||
-          data.hasOpenClass
-        ) {
-          hideModalIfOpen(); // Only hide if modal is open
-        }
+        // if (
+        //   data.display !== 'none' ||
+        //   data.visibility !== 'hidden' ||
+        //   data.hasOpenClass
+        // ) {
+        //   hideModalIfOpen(); // Only hide if modal is open
+        // }
         break;
     }
   };
 
-const hideModalIfOpen = () => {
-  const hideScript = `
+  const hideModalIfOpen = () => {
+    const hideScript = `
   (function() {
     const modal = document.querySelector('#myModal22');
     if (!modal) {
@@ -815,9 +973,9 @@ const hideModalIfOpen = () => {
     true;
   })();
   `;
-  
-  webViewRef.current?.injectJavaScript(hideScript);
-};
+
+    webViewRef.current?.injectJavaScript(hideScript);
+  };
 
   return (
     <>
@@ -844,7 +1002,7 @@ const hideModalIfOpen = () => {
               style={styles.hiddenWebView}
               javaScriptEnabled={true}
               domStorageEnabled={true}
-              startInLoadingState={true}
+              startInLoadingState={false}
               // renderLoading={() => (
               //   <View style={styles.loadingContainer}>
               //     <ActivityIndicator size="large" color="#6200ee" />

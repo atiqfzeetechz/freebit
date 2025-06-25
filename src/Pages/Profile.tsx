@@ -1,58 +1,71 @@
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
-import React, { useEffect } from 'react'
+import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import React, {useEffect} from 'react';
 
-import { style } from '../utils/styles'
-import UserProfile from '../components/Profile'
-import { useIsFocused, useNavigation } from '@react-navigation/native'
-import { Button, Icon, IconButton, MD3Colors } from 'react-native-paper'
-import { useAuth } from '../hooks/useAuth'
-import { wp } from '../helper/hpwp'
-import { useWebView } from '../context/WebviewContext'
+import {style} from '../utils/styles';
+import UserProfile from '../components/Profile';
+import {useIsFocused, useNavigation} from '@react-navigation/native';
+import {Button, Icon, IconButton, MD3Colors} from 'react-native-paper';
+import {useAuth} from '../hooks/useAuth';
+import {wp} from '../helper/hpwp';
+import {useWebView} from '../context/WebviewContext';
+
+import {Appbar} from 'react-native-paper';
+import {useSidebar} from '../context/SidebarContext';
 
 export default function Profile() {
-  const navigation = useNavigation()
-  const isFocused=  useIsFocused()
-const  {logout} =useAuth()
-  const { triggerLogout } = useWebView();
+  const navigation = useNavigation();
+  const isFocused = useIsFocused();
+  const {logout} = useAuth();
+  const {triggerLogout} = useWebView();
+  const {openSidebar} = useSidebar();
 
-const handleLogout =()=>{
-      triggerLogout();
-  // logout()
-  // navigation.navigate('Home')
-}
-  
-  useEffect(()=>{ 
-navigation.setOptions(({
-  title:"Profile",
-  headerRight:()=><TouchableOpacity 
-  style={styles.logoutButton}
-  onPress={() => handleLogout()} // Add your logout function here
->
-  {/* <MaterialCommunityIcons 
+  const handleLogout = () => {
+    triggerLogout();
+    // logout()
+    // navigation.navigate('Home')
+  };
+
+  useEffect(() => {
+    navigation.setOptions({
+      title: 'Profile',
+      headerRight: () => (
+        <TouchableOpacity
+          style={styles.logoutButton}
+          onPress={() => handleLogout()} // Add your logout function here
+        >
+          {/* <MaterialCommunityIcons 
     name="logout" 
     size={24} 
     color="#fff" 
     style={styles.logoutIcon}
   /> */}
-  <IconButton
-  icon={'logout'}
-  />
-  {/* <Text style={styles.logoutText}>Logout</Text> */}
-</TouchableOpacity>
-}))
-  },[isFocused])
+          <IconButton icon={'logout'} />
+          {/* <Text style={styles.logoutText}>Logout</Text> */}
+        </TouchableOpacity>
+      ),
+    });
+  }, [isFocused]);
 
   return (
-    <View style={[style.container,{
-      width:wp(100)
-    }]}>
-      <UserProfile/>
+    <View
+      style={[
+        style.container,
+        {
+          width: wp(100),
+        },
+      ]}>
+      <Appbar.Header
+        style={{
+          width: wp(100),
+        }}>
+        <Appbar.Action icon="menu" onPress={openSidebar} />
+        <Appbar.Content title="Profile" />
+      </Appbar.Header>
+      <UserProfile />
     </View>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
-  logoutButton:{
-
-  }
-})
+  logoutButton: {},
+});

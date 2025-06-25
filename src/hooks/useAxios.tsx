@@ -9,7 +9,8 @@ interface FetchDataProps {
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
   data?: any;
   params?: any;
-  headers?:any
+  headers?:any;
+  loader?:boolean
 }
 
 interface AxiosResponse<T = any> {
@@ -49,10 +50,14 @@ export default function useAxios() {
     method = 'GET',
     data = null,
     params = null,
-    headers = {}
+    headers = {},
+    loader=true
   }: FetchDataProps): Promise<AxiosResponse<T> | undefined> => {
     setError(null);
-    showLoader();
+    if(loader){
+
+      showLoader();
+    }
 
     const config: AxiosRequestConfig = {
       url,

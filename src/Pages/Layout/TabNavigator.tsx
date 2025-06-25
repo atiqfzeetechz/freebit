@@ -8,6 +8,7 @@ import WebSync from '../WebSync';
 import Refer from './Refer';
 import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
 import Withdrawal from '../Withdrawal';
+import Menu from '../Menu';
 
 const Tab = createBottomTabNavigator();
 
@@ -47,6 +48,7 @@ function MyTabs() {
         name="refer"
         component={Refer}
         options={{
+         
           title :"Refer & Earn",
           tabBarLabel: 'Refer&Earn',
           animation: 'shift',
@@ -58,15 +60,25 @@ function MyTabs() {
           ),
         }}
       />
-       <Tab.Screen
+       {/* <Tab.Screen
         name="Profile"
         component={Profile}
         options={{
           animation: 'shift',
           tabBarIcon: () => <Icon name="person" size={30} color="gray"></Icon>,
         }}
-      />
+      /> */}
        <Tab.Screen
+        name="menu"
+        component={Menu}
+        options={{
+            title :"Menu",
+            headerShown:false,
+          animation: 'shift',
+          tabBarIcon: () => <Icon name="menu" size={30} color="gray"></Icon>,
+        }}
+      />
+       {/* <Tab.Screen
         name="Withdrawal"
         component={Withdrawal}
         options={{
@@ -76,7 +88,7 @@ function MyTabs() {
         }}
         
       />
-      
+       */}
     </Tab.Navigator>
   );
 }

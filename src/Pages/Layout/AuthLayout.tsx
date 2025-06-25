@@ -1,33 +1,41 @@
-// AuthLayout.js
 import React from 'react';
-import { createStackNavigator } from '@react-navigation/stack';
+import {createStackNavigator} from '@react-navigation/stack';
 import MyTabs from './TabNavigator';
-import { View, Text } from 'react-native';
-import { useAuth } from '../../hooks/useAuth';
+import {View} from 'react-native';
+import {useAuth} from '../../hooks/useAuth';
 import LoginForm from '../../components/LoginForm';
+import Withdrawal from '../Withdrawal';
+import Sidebar from '../../components/common/Sidebar';
+import UserProfile from '../../components/Profile';
+import Profile from '../Profile';
 
-const AuthStack = createStackNavigator();
 
-const LoginFo = () => {
-  return (
-    <View >
-      <LoginForm onSubmit={() => {}} />
-    </View>
-  );
-};
+const Stack = createStackNavigator();
+
+const LoginFo = () => (
+  <View>
+    <LoginForm onSubmit={() => {}} />
+  </View>
+);
 
 const AuthLayout = () => {
-  const { isLoggedIn } = useAuth(); // Get auth state from context
+  const {isLoggedIn} = useAuth();
 
   return (
     <>
-      {isLoggedIn ? (
-        <MyTabs />
-      ) : (
-        <AuthStack.Navigator screenOptions={{ headerShown: false }}>
-          <AuthStack.Screen name="Login" component={LoginFo} />
-        </AuthStack.Navigator>
-      )}
+      <Stack.Navigator screenOptions={{headerShown: false}}>
+        {isLoggedIn ? (
+          <>
+            <Stack.Screen name="Main" component={MyTabs} />
+            <Stack.Screen name="Withdrawal" component={Withdrawal} />
+            <Stack.Screen name="Profile" component={Profile} />
+          </>
+        ) : (
+          <Stack.Screen name="Login" component={LoginFo} />
+        )}
+      </Stack.Navigator>
+
+      {isLoggedIn && <Sidebar />} {/* ✅ Sidebar rendered globally when logged in */}
     </>
   );
 };
