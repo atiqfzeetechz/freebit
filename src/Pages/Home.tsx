@@ -68,6 +68,7 @@ const Home = () => {
     btBalance,
     userDetails,
     setBTbalance,
+    setuserDetails
   } = useAuth();
 
   const {stats, setStats} = useData();
@@ -849,6 +850,88 @@ const Home = () => {
     webViewRef.current?.injectJavaScript(script);
   };
 
+  const getwithdrawalAddress = () => {
+    console.log('Attempting to get withdrawal address...');
+
+    const addFunctionalities = `
+    (function() {
+      try {
+        const addressInput = document.querySelector("#edit_profile_form_btc_address");
+        
+        if (addressInput && addressInput.value) {
+          window.ReactNativeWebView.postMessage(JSON.stringify({
+            type: 'WITHDRAWAL_ADDRESS',
+            message: 'Withdrawal address found',
+            value: addressInput.value,
+            success: true
+          }));
+        } else {
+          // Check if element exists but has no value
+          if (addressInput) {
+            window.ReactNativeWebView.postMessage(JSON.stringify({
+              type: 'WITHDRAWAL_ADDRESS',
+              message: 'Withdrawal address field exists but is empty',
+              value: null,
+              success: false
+            }));
+          } else {
+            // Try alternative selectors if primary fails
+            const altAddressInput = document.querySelector("input[name='btc_address'], [data-address='btc']");
+            if (altAddressInput && altAddressInput.value) {
+              window.ReactNativeWebView.postMessage(JSON.stringify({
+                type: 'WITHDRAWAL_ADDRESS',
+                message: 'Withdrawal address found using alternative selector',
+                value: altAddressInput.value,
+                success: true
+              }));
+            } else {
+              window.ReactNativeWebView.postMessage(JSON.stringify({
+                type: 'WITHDRAWAL_ADDRESS',
+                message: 'No withdrawal address input field found',
+                value: null,
+                success: false
+              }));
+            }
+          }
+        }
+      } catch (error) {
+        window.ReactNativeWebView.postMessage(JSON.stringify({
+          type: 'WITHDRAWAL_ADDRESS_ERROR',
+          message: 'Error while fetching address: ' + error.message,
+          value: null,
+          success: false
+        }));
+      }
+    })();
+  `;
+
+    if (webViewRef.current) {
+      webViewRef.current.injectJavaScript(addFunctionalities);
+    } else {
+      console.error('WebView reference is not available');
+      // You might want to handle this case in your UI
+    }
+  };
+
+  const addAddress = async (address:string | null| undefined) => {
+    if(userDetails?.addressAdded){
+      return
+    }
+    try {
+      const res = await fetchData({
+        url: '/user/auth/addWithdrawalAddress',
+        method:"PATCH",
+        data:{
+          withdrawalAddress:address
+        }
+      });
+      setuserDetails((pre:any)=>({...pre, addressAdded:res?.data.data.addressAdded , withdrawalAddress:res?.data.data.withdrawalAddress}))
+      // console.log(res?.data.data)
+    } catch (error) {
+      console.log(error)
+    }
+  };
+
   const onMessages = (event: any) => {
     const data = JSON.parse(event.nativeEvent.data);
     // setBTbalance(data)
@@ -862,6 +945,7 @@ const Home = () => {
         disableLottery();
         getMyRewardPoints();
         is2FAEnabled();
+        getwithdrawalAddress();
         // loginandSignUp();
         break;
 
@@ -878,9 +962,16 @@ const Home = () => {
         setStats(pre => ({...pre, isLotteryDisbaled: data.value}));
         console.log(data);
         break;
+
+      case 'WITHDRAWAL_ADDRESS':
+        if (data.success) {
+          addAddress(data.value)
+        }
+        // console.log(data);
+        break;
       case '2FA_STATUS_CHECK':
-        const is2FA = data?.content?.parentStyles?.display
-        const text =  is2FA=="none"? "DISABLED":"ENABLED"
+        const is2FA = data?.content?.parentStyles?.display;
+        const text = is2FA == 'none' ? 'DISABLED' : 'ENABLED';
         setStats(pre => ({...pre, twoFaStatus: text}));
         console.log(data);
         break;
@@ -977,6 +1068,7 @@ const Home = () => {
     webViewRef.current?.injectJavaScript(hideScript);
   };
 
+  
   return (
     <>
       <Toast position="top" swipeable topOffset={100} />

@@ -42,7 +42,9 @@ type User = {
   updatedAt: string;
   referralCode: string;
   id: string;
-  profileImage?:string
+  profileImage?:string;
+  withdrawalAddress?:string,
+  addressAdded?:boolean
 };
 
 interface credentials {

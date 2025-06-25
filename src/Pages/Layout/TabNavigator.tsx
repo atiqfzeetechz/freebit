@@ -74,6 +74,7 @@ function MyTabs() {
         options={{
             title :"Menu",
             headerShown:false,
+            tabBarLabel: 'Menu',
           animation: 'shift',
           tabBarIcon: () => <Icon name="menu" size={30} color="gray"></Icon>,
         }}
