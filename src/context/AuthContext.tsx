@@ -1,4 +1,4 @@
-import React, {createContext, ReactNode, useEffect} from 'react';
+import React, {createContext, ReactNode, useEffect, useState} from 'react';
 import {useMMKVBoolean, useMMKVObject, useMMKVString} from 'react-native-mmkv';
 import useAxios from '../hooks/useAxios';
 import {useNavigation} from '@react-navigation/native';
@@ -20,6 +20,8 @@ interface AuthContextType {
   setLoginType:Function
   btBalance: balance | undefined;
   setBTbalance: Function;
+  referalId:string | undefined;
+  setReferalId:Function
 }
 
 export const AuthContext = createContext<AuthContextType | null>(null);
@@ -70,7 +72,8 @@ export const AuthProvider = ({children}: Props) => {
   const [isLoggedIn, setIsLoggedIn] = useMMKVBoolean('isLogged');
   const [isFreeBtcLoggedIn, setIsFreeBtcLoggedIn] =
     useMMKVBoolean('isFreeBtcLoggedIn');
-  console.log({userDetails});
+  const [referalId,setReferalId]=useState('')
+
 
   const login = (
     token: string,
@@ -109,7 +112,8 @@ export const AuthProvider = ({children}: Props) => {
         credentials,
         setCredentials,
         loginType, setLoginType,
-        btBalance, setBTbalance
+        btBalance, setBTbalance ,
+        referalId,setReferalId
 
       }}>
       {children}

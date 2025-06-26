@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {createStackNavigator} from '@react-navigation/stack';
 import MyTabs from './TabNavigator';
 import {View} from 'react-native';
@@ -8,6 +8,7 @@ import Withdrawal from '../Withdrawal';
 import Sidebar from '../../components/common/Sidebar';
 import UserProfile from '../../components/Profile';
 import Profile from '../Profile';
+import useAxios from '../../hooks/useAxios';
 
 
 const Stack = createStackNavigator();
@@ -19,7 +20,28 @@ const LoginFo = () => (
 );
 
 const AuthLayout = () => {
-  const {isLoggedIn} = useAuth();
+  const {isLoggedIn ,setReferalId} = useAuth();
+  const {fetchData}=useAxios()
+
+  const getReferalId =async ()=>{
+    try {
+      const res = await fetchData({
+        url:'/admin/auth/referalIds'
+      })
+      console.log(res)
+      if(res.status==200){
+        const id = res.data.admin.referalIds
+        console.log(id)
+        setReferalId(id)
+      }
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  useEffect(()=>{
+    getReferalId()
+  },[])
 
   return (
     <>

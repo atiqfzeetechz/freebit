@@ -70,7 +70,7 @@ export default function LoginForm(props: any) {
         activeTab,
         password,
         twoFACode,
-        referCode,
+        referrerCode:referCode,
       });
     }
   };

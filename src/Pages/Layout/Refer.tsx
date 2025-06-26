@@ -41,6 +41,7 @@ export default function Refer() {
         url: '/user/auth/my-referrals',
       });
       if (response.data?.success) {
+        console.log(response.data.data)
         setReferralHistory(response.data.data);
       }
     } catch (error) {

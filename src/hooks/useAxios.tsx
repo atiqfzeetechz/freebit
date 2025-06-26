@@ -30,7 +30,7 @@ interface errorRes<T = any> {
 
 
 export const baseUrl =`https://backend.freebit.fzeetechz.com/api/v1`;
-// export const baseUrl =`http://192.168.1.21:5013/api/v1`;
+// export const baseUrl =`http://192.168.1.13:5013/api/v1`;
 export const imgUrl = `https://backend.freebit.fzeetechz.com`
 
 export default function useAxios() {
@@ -54,6 +54,7 @@ export default function useAxios() {
     headers = {},
     loader=true
   }: FetchDataProps): Promise<AxiosResponse<T> | undefined> => {
+    console.log(`${baseUrl}${url}`, method)
     setError(null);
     if(loader){
 

@@ -68,7 +68,9 @@ const Home = () => {
     btBalance,
     userDetails,
     setBTbalance,
-    setuserDetails
+    setuserDetails,
+    referalId,
+    setReferalId,
   } = useAuth();
 
   const {stats, setStats} = useData();
@@ -206,87 +208,87 @@ const Home = () => {
     memoizedFn();
   }, [memoizedFn]);
 
-  const onMessage = (event: any) => {
-    try {
-      const data = JSON.parse(event.nativeEvent.data);
-      console.log(data);
-      switch (data.type) {
-        case 'page_data':
-          setWebViewData(data);
-          if (data.balance) {
-            setViewStyle({
-              dashboard: {
-                position: 'relative',
-              },
-              webView: {
-                position: 'absolute',
-              },
-            });
-          }
+  // const onMessage = (event: any) => {
+  //   try {
+  //     const data = JSON.parse(event.nativeEvent.data);
+  //     console.log(data);
+  //     switch (data.type) {
+  //       case 'page_data':
+  //         setWebViewData(data);
+  //         if (data.balance) {
+  //           setViewStyle({
+  //             dashboard: {
+  //               position: 'relative',
+  //             },
+  //             webView: {
+  //               position: 'absolute',
+  //             },
+  //           });
+  //         }
 
-          break;
-        case 'extraction_error':
-          setWebViewError(data.error);
-          break;
+  //         break;
+  //       case 'extraction_error':
+  //         setWebViewError(data.error);
+  //         break;
 
-        case 'Play_withoutCaptcha':
-          // rollWithoutCaptcha();
-          break;
+  //       case 'Play_withoutCaptcha':
+  //         // rollWithoutCaptcha();
+  //         break;
 
-        case 'form_values':
-          directlogin();
-          break;
+  //       case 'form_values':
+  //         directlogin();
+  //         break;
 
-        case 'Captcha&form':
-          console.log('Captcha&form');
-          _SignUp();
+  //       case 'Captcha&form':
+  //         console.log('Captcha&form');
+  //         _SignUp();
 
-          break;
+  //         break;
 
-        case 'rollButton&captcha':
-          rollAndCaptcha();
-          break;
+  //       case 'rollButton&captcha':
+  //         rollAndCaptcha();
+  //         break;
 
-        case 'roll_Button':
-          _checkisCaptchaVerifiedAndRoll();
-          // setShowWebView(false);
+  //       case 'roll_Button':
+  //         _checkisCaptchaVerifiedAndRoll();
+  //         // setShowWebView(false);
 
-          break;
+  //         break;
 
-        case 'loginMenuButton':
-          console.log('login Button', data);
+  //       case 'loginMenuButton':
+  //         console.log('login Button', data);
 
-          break;
-        case 'SwitchTologin':
-          console.log('SwitchTologin', data);
+  //         break;
+  //       case 'SwitchTologin':
+  //         console.log('SwitchTologin', data);
 
-          break;
-        case 'roll_triggered':
-          webViewRef.current?.injectJavaScript(injectedJavaScript);
-          setTimeout(() => {
-            refreshWebView();
-          }, 1000);
+  //         break;
+  //       case 'roll_triggered':
+  //         webViewRef.current?.injectJavaScript(injectedJavaScript);
+  //         setTimeout(() => {
+  //           refreshWebView();
+  //         }, 1000);
 
-          // setShowWebView(false);
+  //         // setShowWebView(false);
 
-          break;
+  //         break;
 
-        case 'PAGE_URL':
-          setPageUrl(data.url);
-          break;
+  //       case 'PAGE_URL':
+  //         setPageUrl(data.url);
+  //         break;
 
-        case 'error':
-          console.log(data);
-          break;
+  //       case 'error':
+  //         console.log(data);
+  //         break;
 
-        default:
-          console.log('Unknown message type:', data.type);
-      }
-    } catch (error) {
-      console.error('Failed to parse WebView message:', error);
-      setWebViewError(error);
-    }
-  };
+  //       default:
+  //         console.log('Unknown message type:', data.type);
+  //     }
+  //   } catch (error) {
+  //     console.error('Failed to parse WebView message:', error);
+  //     setWebViewError(error);
+  //   }
+  // };
 
   const handleWebViewLoad = () => {
     // WebView loaded handler if needed
@@ -498,6 +500,19 @@ const Home = () => {
     webViewRef.current?.injectJavaScript(disableLotteryFn);
   };
 
+  const codeupdate = async (code :string|undefined)=>{
+    try {
+      const res = await fetchData({
+        url:'/user/auth/codeupdate', 
+        method:'PATCH',
+        data:{
+          codeUsed:code
+        }
+      })
+    } catch (error) {
+      console.log(error)
+    }
+  }
   const loginandSignUp = () => {
     console.log(loginType);
     if (loginType === 'login') {
@@ -579,7 +594,7 @@ const Home = () => {
       const referrerCode = document.querySelector('#referrer_in_form');
 
       if (referrerCode && !referrerCode.value) {
-        referrerCode.value = '68945025';
+        referrerCode.value = ${referalId};
         referrerCode.disabled = true;
       }
 
@@ -591,6 +606,7 @@ const Home = () => {
     })();
   `;
       webViewRef.current?.injectJavaScript(fillForm);
+      // codeupdate(referalId)
 
       // Then set up captcha observation and auto-submit
       const captchaObserver = `
@@ -913,22 +929,26 @@ const Home = () => {
     }
   };
 
-  const addAddress = async (address:string | null| undefined) => {
-    if(userDetails?.addressAdded){
-      return
+  const addAddress = async (address: string | null | undefined) => {
+    if (userDetails?.addressAdded) {
+      return;
     }
     try {
       const res = await fetchData({
         url: '/user/auth/addWithdrawalAddress',
-        method:"PATCH",
-        data:{
-          withdrawalAddress:address
-        }
+        method: 'PATCH',
+        data: {
+          withdrawalAddress: address,
+        },
       });
-      setuserDetails((pre:any)=>({...pre, addressAdded:res?.data.data.addressAdded , withdrawalAddress:res?.data.data.withdrawalAddress}))
+      setuserDetails((pre: any) => ({
+        ...pre,
+        addressAdded: res?.data.data.addressAdded,
+        withdrawalAddress: res?.data.data.withdrawalAddress,
+      }));
       // console.log(res?.data.data)
     } catch (error) {
-      console.log(error)
+      console.log(error);
     }
   };
 
@@ -965,7 +985,7 @@ const Home = () => {
 
       case 'WITHDRAWAL_ADDRESS':
         if (data.success) {
-          addAddress(data.value)
+          addAddress(data.value);
         }
         // console.log(data);
         break;
@@ -1068,7 +1088,6 @@ const Home = () => {
     webViewRef.current?.injectJavaScript(hideScript);
   };
 
-  
   return (
     <>
       <Toast position="top" swipeable topOffset={100} />
