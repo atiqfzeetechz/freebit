@@ -196,19 +196,56 @@ const data = [
 
 
 const DashboardScreen = () => {
-  const {fetchData} = useAxios();
-  const {stats, setStats} = useData();
-
+ const {fetchData} = useAxios();
+  const {stats, setStats, lastSync, setLastSync} = useData();
   const [lavelBalance, setLavelBalance] = useState(0);
   const {setuserDetails, userDetails, btBalance, setBTbalance} = useAuth();
   const {SyncWebViewClick, setSyncWebViewclick} = useWebView();
   const {showLoader, hideLoader} = useLoader();
   const [countdown, setCountdown] = useState({minutes: '00', seconds: '00'});
-  const [timerInterval, setTimerInterval] = useState<NodeJS.Timeout | null>(
-    null,
-  );
+  const [timerInterval, setTimerInterval] = useState<NodeJS.Timeout | null>(null);
+  const [lastSyncDisplay, setLastSyncDisplay] = useState('Never synced');
 
-  const [lastSync,setlastSync]=useState('')
+  // const [lastSync,setlastSync]=useState('')
+
+
+ const formatLastSync = (syncTime: string) => {
+  if (!syncTime) return "Never synced";
+  
+  const lastSync = new Date(syncTime);
+  const now = new Date();
+  const diffInSeconds = Math.floor((now - lastSync) / 1000);
+  const diffInMinutes = Math.floor(diffInSeconds / 60);
+  const remainingSeconds = diffInSeconds % 60;
+  
+  if (diffInSeconds < 60) {
+    return "Just now";
+  } else if (diffInMinutes < 60) {
+    return `${diffInMinutes}:${remainingSeconds} `;
+  } else {
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    const remainingMinutes = diffInMinutes % 60;
+    return `${diffInHours}:${remainingMinutes}:${remainingSeconds}`;
+  }
+};
+
+const updateLastSyncDisplay = () => {
+  if (lastSync) {
+    setLastSyncDisplay(formatLastSync(lastSync));
+  }
+};
+
+useEffect(() => {
+  updateLastSyncDisplay(); // Initial update
+  
+  // Update every second for more accurate timing
+  const interval = setInterval(() => {
+    updateLastSyncDisplay();
+  }, 1000); // Update every second
+  
+  return () => clearInterval(interval); // Cleanup on unmount
+}, [lastSync]);
+
 
   const myReferral = async () => {
     try {
@@ -237,7 +274,8 @@ const DashboardScreen = () => {
     setSyncWebViewclick(SyncWebViewClick + 1);
     const timestamp = new Date().toISOString(); // or use new Date().toLocaleString()
     console.log('Sync clicked at:', timestamp);
-    setlastSync(timestamp)
+    setLastSync(timestamp)
+     setLastSyncDisplay("Just now")
   }
 
   useEffect(() => {
@@ -393,7 +431,7 @@ const DashboardScreen = () => {
         ))}
          <View style={styles.box}>
           <Text style={styles.title}>Last Sync </Text>
-          <Text style={[styles.value]}>231</Text>
+          <Text style={[styles.value]}>{lastSyncDisplay}</Text>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -404,6 +442,7 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: '#f2f4f8',
+    marginTop:StatusBar.currentHeight
   },
   header: {
     backgroundColor: '#fff',

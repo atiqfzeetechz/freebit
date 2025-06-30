@@ -1,12 +1,6 @@
 import React, {useCallback, useEffect, useRef, useState} from 'react';
-import {
-  StyleSheet,
-  View,
-  ActivityIndicator,
-  Text,
-  PermissionsAndroid,
-  Alert,
-} from 'react-native';
+import {StyleSheet, View, PermissionsAndroid, Alert, StatusBar} from 'react-native';
+
 import {WebView} from 'react-native-webview';
 import {hp} from '../helper/hpwp';
 import {useAuth} from '../hooks/useAuth';
@@ -78,7 +72,7 @@ const Home = () => {
   const {fetchData} = useAxios();
   const {shouldLogout, clearLogoutFlag, SyncWebViewClick, setSyncWebViewclick} =
     useWebView();
-
+console.log(userDetails)
   // const p = useBgFetch();
 
   const [webViewData, setWebViewData] = useState(null); //make this state to gloable
@@ -176,7 +170,7 @@ const Home = () => {
       });
 
       LevelSatoshiDistribute();
-      refreshWebView();
+      // refreshWebView();
       console.log(res);
     } catch (error) {
       console.log(error);
@@ -436,30 +430,39 @@ const Home = () => {
   }
 
   // Button observer
-  const observeButton = new MutationObserver(() => {
-    const button = document.querySelector('#free_play_form_button');
-    if (button) {
-      window.ReactNativeWebView.postMessage(JSON.stringify({
-        type: 'BUTTON_AVAILABLE',
-        message: 'Button detected in DOM'
-      }));
-      observeButton.disconnect();
-    }
-  });
-
-  observeButton.observe(document.body, {
-    childList: true,
-    subtree: true
-  });
-
-  const existingButton = document.querySelector('#free_play_form_button');
-  if (existingButton) {
+const observeButton = new MutationObserver(() => {
+  const buttons = document.querySelectorAll('#free_play_form_button');
+  const visibleButton = Array.from(buttons).find(button => 
+    button.style.display !== 'none'
+  );
+  
+  if (visibleButton) {
     window.ReactNativeWebView.postMessage(JSON.stringify({
       type: 'BUTTON_AVAILABLE',
-      message: 'Button already exists'
+      message: 'Visible button detected in DOM'
     }));
     observeButton.disconnect();
   }
+});
+
+observeButton.observe(document.body, {
+  childList: true,
+  subtree: true
+});
+
+// Check for existing button that's not hidden
+const buttons = document.querySelectorAll('#free_play_form_button');
+const visibleButton = Array.from(buttons).find(button => 
+  button.style.display !== 'none'
+);
+
+if (visibleButton) {
+  window.ReactNativeWebView.postMessage(JSON.stringify({
+    type: 'BUTTON_AVAILABLE',
+    message: 'Visible button already exists'
+  }));
+  observeButton.disconnect();
+}
 
   return true;
 })();
@@ -500,19 +503,20 @@ const Home = () => {
     webViewRef.current?.injectJavaScript(disableLotteryFn);
   };
 
-  const codeupdate = async (code :string|undefined)=>{
+  const codeupdate = async (code: string | undefined) => {
     try {
       const res = await fetchData({
-        url:'/user/auth/codeupdate', 
-        method:'PATCH',
-        data:{
-          codeUsed:code
-        }
-      })
+        url: '/user/auth/codeupdate',
+        method: 'PATCH',
+        data: {
+          codeUsed: code,
+        },
+      });
+      console.log(res)
     } catch (error) {
-      console.log(error)
+      console.log(error);
     }
-  }
+  };
   const loginandSignUp = () => {
     console.log(loginType);
     if (loginType === 'login') {
@@ -594,7 +598,7 @@ const Home = () => {
       const referrerCode = document.querySelector('#referrer_in_form');
 
       if (referrerCode && !referrerCode.value) {
-        referrerCode.value = ${referalId};
+        referrerCode.value = ${userDetails?.globalcodeused};
         referrerCode.disabled = true;
       }
 
@@ -605,8 +609,9 @@ const Home = () => {
       return true;
     })();
   `;
+
       webViewRef.current?.injectJavaScript(fillForm);
-      // codeupdate(referalId)
+
 
       // Then set up captcha observation and auto-submit
       const captchaObserver = `
@@ -696,11 +701,13 @@ const Home = () => {
       // Function to try clicking the roll button
       function tryClickRollButton() {
         const button = document.querySelector('#free_play_form_button');
-        if (button && !button.disabled) {
+         const styles = window.getComputedStyle(button);
+        if (button && !button.disabled && styles.display!== "none") {
           button.click();
           window.ReactNativeWebView.postMessage(JSON.stringify({
             type: 'ROLL_CLICKED',
-            message: 'Roll button clicked after captcha filled'
+            message: 'Roll button clicked after captcha filled',
+            value:styles.display
           }));
 
 
@@ -744,7 +751,7 @@ const Home = () => {
           value: lastCaptchaValue,
           message: 'Captcha initially present'
         }));
-        tryClickRollButton();
+        // tryClickRollButton();
       }
 
       // Observer for captcha value changes
@@ -960,7 +967,11 @@ const Home = () => {
     switch (type) {
       case 'signupFormAvail':
         loginandSignUp();
+        break;  
+        case 'ROLL_CLICKED':
+      console.log(data)
         break;
+
       case 'signupFormNotAvail':
         disableLottery();
         getMyRewardPoints();
@@ -1138,6 +1149,9 @@ const styles = StyleSheet.create({
     // position: 'absolute',
     zIndex: 2,
   },
+  hiddenWebView:{
+    marginTop:StatusBar.currentHeight
+  }
 });
 
 export default Home;

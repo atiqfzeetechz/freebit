@@ -1,6 +1,5 @@
-import { useContext } from "react";
-import { DataContext } from "../context/DataContext";
-
+import {useContext} from 'react';
+import {DataContext} from '../context/DataContext';
 
 interface StatsType {
   rewards: string;
@@ -12,6 +11,8 @@ interface StatsType {
 interface DataContextType {
   stats: StatsType;
   setStats: React.Dispatch<React.SetStateAction<StatsType>>;
+  lastSync: String | undefined | null;
+  setLastSync: Function;
 }
 export const useData = (): DataContextType => {
   const context = useContext(DataContext);
