@@ -35,7 +35,7 @@ type WithdrawalItem = {
   createdAt: string;
 };
 
-const MIN_BTC = '0.00030000';
+const MIN_BTC = '30000';
 
 const Withdrawal = () => {
   const theme = useTheme();
@@ -45,6 +45,7 @@ const Withdrawal = () => {
   const {fetchData} = useAxios();
   const {userDetails} = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [ourWallet, setOurWallet] = useState(null);
 
   const fetchWithdrawalHistory = async () => {
     try {
@@ -58,8 +59,27 @@ const Withdrawal = () => {
     }
   };
 
+  const ourWalletFn = async () => {
+    try {
+      const response = await fetchData({
+        url: `/user/income/distributeincom/${userDetails?.email}`,
+      });
+      console.log(response);
+
+      // if (response.data?.success) {
+      setOurWallet(response?.data?.wallet?.balance || 0);
+      // console.log(response?.data?.wallet?.balance)
+      // }
+    } catch (error) {
+      console.log(error);
+      // setSnackbarMessage('Failed to fetch referral data');
+      // setVisibleSnackbar(true);
+    }
+  };
+
   useEffect(() => {
     fetchWithdrawalHistory();
+    ourWalletFn();
   }, []);
 
   const handleWithdraw = async () => {
@@ -83,6 +103,7 @@ const Withdrawal = () => {
         setAmount('');
         setTimeout(async () => {
           await fetchWithdrawalHistory();
+          ourWalletFn()
         }, 300);
       }
 
@@ -107,7 +128,13 @@ const Withdrawal = () => {
 
   const [text, setText] = React.useState('');
 
-  const onChangeText = (text: any) => setAmount(text);
+  const onChangeText = (text: any) => {
+    console.log(isNaN(text));
+    if (!isNaN(text)) {
+      setAmount(text);
+    }
+    console.log(text);
+  };
 
   const hasErrors = () => {
     return amount < MIN_BTC;
@@ -146,9 +173,7 @@ const Withdrawal = () => {
                     <Text style={styles.balanceLabel}>Available Balance</Text>
                   </View>
                   <Text style={styles.balanceAmount}>
-                    ₹
-                    {userDetails?.wallet?.balance?.toLocaleString('en-IN') ??
-                      '0.00'}
+                    ₹{ourWallet?.toLocaleString('en-IN') ?? '0.00'}
                   </Text>
                 </Card.Content>
               </Card>
@@ -171,7 +196,7 @@ const Withdrawal = () => {
                     returnKeyType="done"
                   />
                   <HelperText type="error" visible={hasErrors()}>
-                    MIN. WITHDRAW: 0.00030000 BTC
+                    MIN. WITHDRAW: {MIN_BTC}
                   </HelperText>
                   <TouchableOpacity onPress={() => setAmount(MIN_BTC)}>
                     <Text style={{color: theme.colors.primary}}>

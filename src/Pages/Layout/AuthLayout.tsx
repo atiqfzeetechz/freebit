@@ -9,6 +9,7 @@ import Sidebar from '../../components/common/Sidebar';
 import UserProfile from '../../components/Profile';
 import Profile from '../Profile';
 import useAxios from '../../hooks/useAxios';
+import ChangeWithDrawlAddress from '../ChangeWithDrawlAddress';
 
 
 const Stack = createStackNavigator();
@@ -51,6 +52,7 @@ const AuthLayout = () => {
             <Stack.Screen name="Main" component={MyTabs} />
             <Stack.Screen name="Withdrawal" component={Withdrawal} />
             <Stack.Screen name="Profile" component={Profile} />
+            <Stack.Screen name="changeWithdrawlAddress" component={ChangeWithDrawlAddress} />
           </>
         ) : (
           <Stack.Screen name="Login" component={LoginFo} />
