@@ -27,9 +27,13 @@ export default function Sidebar() {
   const menuItems = [
     {label: 'Profile', icon: 'person', route: 'menu'},
     {label: 'Withdrawal', icon: 'attach-money', route: 'Withdrawal'},
-    {label: 'Change Withdrwal Address', icon: 'report', route: 'changeWithdrawlAddress'},
-    {label: 'Withdrawal Report', icon: 'report'},
-    {label: 'Level Reports', icon: 'assessment'},
+    {
+      label: 'Change Withdrwal Address',
+      icon: 'report',
+      route: 'changeWithdrawlAddress',
+    },
+    {label: 'Withdrawal Report', icon: 'report', route: 'WithdrawalReports'},
+    {label: 'Level Reports', icon: 'assessment', route:"levelreports"},
   ];
 
   const handleItemPress = route => {

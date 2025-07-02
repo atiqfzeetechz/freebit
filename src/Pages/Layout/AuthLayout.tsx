@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, {useEffect} from 'react';
 import {createStackNavigator} from '@react-navigation/stack';
 import MyTabs from './TabNavigator';
 import {View} from 'react-native';
@@ -10,7 +10,8 @@ import UserProfile from '../../components/Profile';
 import Profile from '../Profile';
 import useAxios from '../../hooks/useAxios';
 import ChangeWithDrawlAddress from '../ChangeWithDrawlAddress';
-
+import WReports from '../WReports';
+import LevelReports from '../LevelReports';
 
 const Stack = createStackNavigator();
 
@@ -21,28 +22,28 @@ const LoginFo = () => (
 );
 
 const AuthLayout = () => {
-  const {isLoggedIn ,setReferalId} = useAuth();
-  const {fetchData}=useAxios()
+  const {isLoggedIn, setReferalId} = useAuth();
+  const {fetchData} = useAxios();
 
-  const getReferalId =async ()=>{
+  const getReferalId = async () => {
     try {
       const res = await fetchData({
-        url:'/admin/auth/referalIds'
-      })
-      console.log(res)
-      if(res.status==200){
-        const id = res.data.admin.referalIds
-        console.log(id)
-        setReferalId(id)
+        url: '/admin/auth/referalIds',
+      });
+      console.log(res);
+      if (res.status == 200) {
+        const id = res.data.admin.referalIds;
+        console.log(id);
+        setReferalId(id);
       }
     } catch (error) {
-      console.log(error)
+      console.log(error);
     }
-  }
+  };
 
-  useEffect(()=>{
-    getReferalId()
-  },[])
+  useEffect(() => {
+    getReferalId();
+  }, []);
 
   return (
     <>
@@ -51,15 +52,20 @@ const AuthLayout = () => {
           <>
             <Stack.Screen name="Main" component={MyTabs} />
             <Stack.Screen name="Withdrawal" component={Withdrawal} />
+            <Stack.Screen name="WithdrawalReports" component={WReports} />
+            <Stack.Screen name="levelreports" component={LevelReports} />
             <Stack.Screen name="Profile" component={Profile} />
-            <Stack.Screen name="changeWithdrawlAddress" component={ChangeWithDrawlAddress} />
+            <Stack.Screen
+              name="changeWithdrawlAddress"
+              component={ChangeWithDrawlAddress}
+            />
           </>
         ) : (
           <Stack.Screen name="Login" component={LoginFo} />
         )}
       </Stack.Navigator>
-
-      {isLoggedIn && <Sidebar />} {/* ✅ Sidebar rendered globally when logged in */}
+      {isLoggedIn && <Sidebar />}{' '}
+      {/* ✅ Sidebar rendered globally when logged in */}
     </>
   );
 };

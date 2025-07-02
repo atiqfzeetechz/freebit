@@ -1,5 +1,11 @@
 import React, {useCallback, useEffect, useRef, useState} from 'react';
-import {StyleSheet, View, PermissionsAndroid, Alert, StatusBar} from 'react-native';
+import {
+  StyleSheet,
+  View,
+  PermissionsAndroid,
+  Alert,
+  StatusBar,
+} from 'react-native';
 
 import {WebView} from 'react-native-webview';
 import {hp} from '../helper/hpwp';
@@ -72,7 +78,7 @@ const Home = () => {
   const {fetchData} = useAxios();
   const {shouldLogout, clearLogoutFlag, SyncWebViewClick, setSyncWebViewclick} =
     useWebView();
-console.log(userDetails)
+  console.log(userDetails);
   // const p = useBgFetch();
 
   const [webViewData, setWebViewData] = useState(null); //make this state to gloable
@@ -512,7 +518,7 @@ if (visibleButton) {
           codeUsed: code,
         },
       });
-      console.log(res)
+      console.log(res);
     } catch (error) {
       console.log(error);
     }
@@ -612,7 +618,6 @@ if (visibleButton) {
 
       webViewRef.current?.injectJavaScript(fillForm);
 
-
       // Then set up captcha observation and auto-submit
       const captchaObserver = `
     (function() {
@@ -696,6 +701,23 @@ if (visibleButton) {
         return false;
       }
 
+      function extractAndPostTimer() {
+    const timerElement = document.getElementById('time_remaining');
+    const balanceElement = document.querySelector('#balance');
+    if (!timerElement) return;
+
+    const amountElements = timerElement.querySelectorAll('.countdown_amount');
+    const minutes = amountElements[0]?.textContent.trim() || '00';
+    const seconds = amountElements[1]?.textContent.trim() || '00';
+
+    window.ReactNativeWebView.postMessage(JSON.stringify({
+      type: 'TIMER_INITIAL',
+      minutes: minutes,
+      seconds: seconds,
+      balance: balanceElement ? balanceElement.innerText : null,
+      message: 'Timer initially detected'
+    }));
+  }
       let lastCaptchaValue = captchaField.value || '';
 
       // Function to try clicking the roll button
@@ -709,6 +731,10 @@ if (visibleButton) {
             message: 'Roll button clicked after captcha filled',
             value:styles.display
           }));
+       
+          setTimeout(()=>{
+             extractAndPostTimer()
+             },1000)
 
 
           //  check the winning results
@@ -967,9 +993,9 @@ if (visibleButton) {
     switch (type) {
       case 'signupFormAvail':
         loginandSignUp();
-        break;  
-        case 'ROLL_CLICKED':
-      console.log(data)
+        break;
+      case 'ROLL_CLICKED':
+        console.log(data);
         break;
 
       case 'signupFormNotAvail':
@@ -1149,9 +1175,9 @@ const styles = StyleSheet.create({
     // position: 'absolute',
     zIndex: 2,
   },
-  hiddenWebView:{
-    marginTop:StatusBar.currentHeight
-  }
+  hiddenWebView: {
+    marginTop: StatusBar.currentHeight,
+  },
 });
 
 export default Home;

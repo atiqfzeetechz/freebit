@@ -121,7 +121,7 @@ export default function ChangeWithDrawlAddress() {
   const [visible, setVisible] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [addressType, setAddressType] = useState('upi');
+  const [addressType, setAddressType] = useState('crypto_wallet');
   const [menuVisible, setMenuVisible] = useState(false);
   const [upiInput, setUpiInput] = useState<UPI>(upid);
   const [bankInput, setBankInput] = useState<BANKDETAILS>(bankdetails);
@@ -461,12 +461,12 @@ export default function ChangeWithDrawlAddress() {
           onDismiss={() => setShowAddModal(false)}
           contentContainerStyle={styles.addModalContainer}>
           <ScrollView style={styles.addModalScroll}>
-            <View style={styles.modalHeader}>
+            {/* <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Add Withdrawal Address</Text>
               <IconButton icon="close" onPress={() => setShowAddModal(false)} />
-            </View>
+            </View> */}
 
-            <Text style={styles.inputLabel}>Address Type</Text>
+            {/* <Text style={styles.inputLabel}>Address Type</Text>
             <View style={styles.typeSelector}>
               <TouchableOpacity
                 style={[
@@ -497,7 +497,7 @@ export default function ChangeWithDrawlAddress() {
                 <FontAwesome name="btc" size={24} color="#f7931a" />
                 <Text style={styles.typeOptionText}>Crypto</Text>
               </TouchableOpacity>
-            </View>
+            </View> */}
 
             <TextInput
               label="Nickname"
@@ -508,7 +508,7 @@ export default function ChangeWithDrawlAddress() {
               onChangeText={val => setNickName(val)}
             />
 
-            {addressType === 'upi' && (
+            {/* {addressType === 'upi' && (
               <>
                 <TextInput
                   label="UPI ID"
@@ -531,9 +531,9 @@ export default function ChangeWithDrawlAddress() {
                   }
                 />
               </>
-            )}
+            )} */}
 
-            {addressType === 'bank_account' && (
+            {/* {addressType === 'bank_account' && (
               <>
                 <TextInput
                   label="Account Holder Name"
@@ -593,7 +593,7 @@ export default function ChangeWithDrawlAddress() {
                   }
                 />
               </>
-            )}
+            )} */}
 
             {addressType === 'crypto_wallet' && (
               <>

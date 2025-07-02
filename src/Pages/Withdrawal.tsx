@@ -50,7 +50,7 @@ const Withdrawal = () => {
   const fetchWithdrawalHistory = async () => {
     try {
       const {data} = await fetchData({
-        url: '/user/withdraw/my-withdrawals?page=1&limit=10000',
+        url: '/user/withdraw/my-withdrawals?page=1&limit=3',
         loader: false,
       });
       setAllHistory(data?.data?.withdrawals);
@@ -103,7 +103,7 @@ const Withdrawal = () => {
         setAmount('');
         setTimeout(async () => {
           await fetchWithdrawalHistory();
-          ourWalletFn()
+          ourWalletFn();
         }, 300);
       }
 
