@@ -5,6 +5,8 @@ import useAxios from '../hooks/useAxios';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { Appbar, Button } from 'react-native-paper';
 import { wp } from '../helper/hpwp';
+import { formatBTC } from '../utils/NumerConvertor';
+import { useAuth } from '../hooks/useAuth';
 
 export default function LevelReports() {
   const {fetchData} = useAxios();
@@ -56,47 +58,60 @@ const UplineNetwork = () => {
   const [uplineTree, setUplineTree] = useState([]);
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
-  const getReports = async () => {
+  const {userDetails}=useAuth()
+
+  const getCommission = async () => {
     try {
-      const res = await fetchData({
-        url: '/user/auth/myReferal?type=upline',
+      const {data} = await fetchData({
+        url: '/user/income/getCommission',
       });
-      setUplineTree(res.data.data);
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 800,
-        easing: Easing.out(Easing.exp),
-        useNativeDriver: true,
-      }).start();
+
+      if (data?.data) {
+        // Sort by level ascending to match previous order
+        const sorted = data.data.sort((a, b) => a.level - b.level);
+        setUplineTree(sorted);
+
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 800,
+          easing: Easing.out(Easing.exp),
+          useNativeDriver: true,
+        }).start();
+      }
     } catch (error) {
-      console.error(error);
+      console.error('Failed to fetch commission data:', error);
     }
   };
 
   useEffect(() => {
-    getReports();
+    getCommission();
   }, []);
+  console.log(uplineTree)
 
   return (
-    <View style={styles.tabContainer}>
-      <Text style={styles.header}>Your Upline Network</Text>
+    <View style={uplineStyles.tabContainer}>
+      <Text style={uplineStyles.header}>Your Upline Network</Text>
 
-      <View style={styles.treeContainer}>
+      <View style={uplineStyles.treeContainer}>
         {uplineTree.length > 0 && (
-          <Animated.View style={[styles.rootUserCard, {opacity: fadeAnim}]}>
-            <View style={[styles.avatar, styles.rootAvatar]}>
+          <Animated.View style={[uplineStyles.rootUserCard, {opacity: fadeAnim}]}>
+            <View style={[uplineStyles.avatar, uplineStyles.rootAvatar]}>
               <Icon name="star" size={24} color="#fff" />
             </View>
-            <View style={styles.userInfo}>
-              <Text style={styles.userName}>
+            <View style={uplineStyles.userInfo}>
+              <Text style={uplineStyles.userName}>
                 {uplineTree[uplineTree.length - 1].email}
               </Text>
-              <Text style={styles.userLevel}>
+              {/* <Text style={uplineStyles.userLevel}>
                 Level {uplineTree[uplineTree.length - 1].level} (Root)
+              </Text> */}
+              <Text style={uplineStyles.userBTC}>
+               Earned :{formatBTC(uplineTree[uplineTree.length - 1].totalBTC)} BTC
+                {/* Earned: {uplineTree[uplineTree.length - 1].totalBTC} BTC */}
               </Text>
             </View>
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>FOUNDER</Text>
+            <View style={uplineStyles.badge}>
+              <Text style={uplineStyles.badgeText}>FOUNDER</Text>
             </View>
           </Animated.View>
         )}
@@ -106,9 +121,9 @@ const UplineNetwork = () => {
           .reverse()
           .map((user, index) => (
             <Animated.View
-              key={user._id}
+              key={user.toUserId}
               style={[
-                styles.treeBranch,
+                uplineStyles.treeBranch,
                 {
                   opacity: fadeAnim,
                   transform: [
@@ -121,30 +136,33 @@ const UplineNetwork = () => {
                   ],
                 },
               ]}>
-              <View style={styles.connectorLine} />
-              <View style={styles.userCard}>
-                <View style={[styles.avatar, styles.uplineAvatar]}>
+              <View style={uplineStyles.connectorLine} />
+              <View style={uplineStyles.userCard}>
+                <View style={[uplineStyles.avatar, uplineStyles.uplineAvatar]}>
                   <Icon name="person-outline" size={24} color="#fff" />
                 </View>
-                <View style={styles.userInfo}>
-                  <Text style={styles.userName}>{user.email}</Text>
-                  <Text style={styles.userLevel}>Level {user.level}</Text>
+                <View style={uplineStyles.userInfo}>
+                  <Text style={uplineStyles.userName}>{user.email}</Text>
+                  <Text style={uplineStyles.userLevel}>Level {user.level}</Text>
+                  <Text style={uplineStyles.userBTC}>
+                    Earned: {user.totalBTC} BTC
+                  </Text>
                 </View>
                 <Icon name="arrow-downward" size={20} color="#4CAF50" />
               </View>
             </Animated.View>
           ))}
 
-        <Animated.View style={[styles.currentUserCard, {opacity: fadeAnim}]}>
-          <View style={styles.avatar}>
+        <Animated.View style={[uplineStyles.currentUserCard, {opacity: fadeAnim}]}>
+          <View style={uplineStyles.avatar}>
             <Icon name="person" size={28} color="#fff" />
           </View>
-          <View style={styles.userInfo}>
-            <Text style={styles.userName}>You (gold8)</Text>
-            <Text style={styles.userLevel}>Level 0</Text>
+          <View style={uplineStyles.userInfo}>
+            <Text style={uplineStyles.userName}>You ({userDetails.email})</Text>
+            <Text style={uplineStyles.userLevel}>Level 0</Text>
           </View>
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>CURRENT</Text>
+          <View style={uplineStyles.badge}>
+            <Text style={uplineStyles.badgeText}>CURRENT</Text>
           </View>
         </Animated.View>
       </View>
@@ -156,6 +174,7 @@ const DownlineNetwork = () => {
   const {fetchData} = useAxios();
   const [downlineTree, setDownlineTree] = useState([]);
   const fadeAnim = useRef(new Animated.Value(0)).current;
+
 
   const getReports = async () => {
     try {
@@ -176,6 +195,7 @@ const DownlineNetwork = () => {
   };
 
   useEffect(() => {
+  
     getReports();
   }, []);
 
@@ -245,6 +265,128 @@ const DownlineNetwork = () => {
   </ScrollView>
   );
 };
+
+
+const uplineStyles = StyleSheet.create({
+  tabContainer: {
+    flex: 1,
+    padding: 16,
+    backgroundColor: '#f8f9fa',
+  },
+  header: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#2c3e50',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  treeContainer: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  rootUserCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    width: '100%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 3,
+    borderLeftWidth: 4,
+    borderLeftColor: '#e67e22',
+  },
+  userCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+    borderRadius: 10,
+    padding: 14,
+    marginBottom: 8,
+    width: '95%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  currentUserCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    padding: 16,
+    marginTop: 8,
+    width: '100%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
+    borderLeftWidth: 4,
+    borderLeftColor: '#3498db',
+  },
+  avatar: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#3498db',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  rootAvatar: {
+    backgroundColor: '#e67e22',
+  },
+  uplineAvatar: {
+    backgroundColor: '#2ecc71',
+  },
+  userInfo: {
+    flex: 1,
+  },
+  userName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#2c3e50',
+    marginBottom: 4,
+  },
+  userLevel: {
+    fontSize: 14,
+    color: '#7f8c8d',
+    marginBottom: 4,
+  },
+  userBTC: {
+    fontSize: 14,
+    color: '#27ae60',
+    fontWeight: '500',
+  },
+  badge: {
+    backgroundColor: '#ecf0f1',
+    borderRadius: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  badgeText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#7f8c8d',
+    textTransform: 'uppercase',
+  },
+  treeBranch: {
+    width: '100%',
+    alignItems: 'center',
+  },
+  connectorLine: {
+    width: 2,
+    height: 20,
+    backgroundColor: '#bdc3c7',
+    marginVertical: 4,
+  },
+});
 
 const styles = StyleSheet.create({
 

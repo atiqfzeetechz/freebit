@@ -173,7 +173,7 @@ const Withdrawal = () => {
                     <Text style={styles.balanceLabel}>Available Balance</Text>
                   </View>
                   <Text style={styles.balanceAmount}>
-                    ₹{ourWallet?.toLocaleString('en-IN') ?? '0.00'}
+                    ₹{ourWallet}
                   </Text>
                 </Card.Content>
               </Card>

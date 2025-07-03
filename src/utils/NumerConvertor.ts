@@ -19,4 +19,17 @@ function convertScientificToDecimal(input:any) {
   const zeros = Math.abs(exponent) - 1;
   return '0.' + '0'.repeat(zeros) + base;
 }
-export {convertScientificToDecimal}
+
+
+function formatBTC(value:any) {
+  // Convert scientific notation to fixed string
+  const fixedString = value.toFixed(11);
+  
+  // Remove trailing zeros and unnecessary decimal point
+  return fixedString
+    .replace(/\.?0+$/, '') // Remove trailing zeros and possible decimal point
+    .replace(/^0\./, '0.'); // Ensure leading zero is kept for values < 1
+}
+
+
+export {convertScientificToDecimal ,formatBTC}
