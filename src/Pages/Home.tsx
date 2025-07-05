@@ -474,6 +474,30 @@ if (visibleButton) {
 })();
 `;
 
+  const saveFreebtcReferCode = async (code: any) => {
+    try {
+      const res = await fetchData({
+        url: '/user/auth/addFreebtcReferCode',
+        method: 'PATCH',
+        data: {
+          ourCode: code,
+        },
+      });
+      const referCode = res?.data.data.freebtcReferCode;
+      const isAdmin = res?.data.data.isAdmin;
+
+      setuserDetails(prev => ({
+        ...prev,
+        freebtcReferCode: referCode,
+        isAdmin: isAdmin,
+      }));
+
+      console.log(res);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   const disableLottery = () => {
     console.log('disableLottery called');
     const disableLotteryFn = `
@@ -1003,7 +1027,30 @@ if (visibleButton) {
         getMyRewardPoints();
         is2FAEnabled();
         getwithdrawalAddress();
+      if(userDetails.isAdmin){
+          referhistory();
+      }
+        if (!userDetails.freebtcReferCode) {
+          referalCode();
+        }
         // loginandSignUp();
+        break;
+
+      case 'REFER_VALUE':
+        console.log(data);
+        const referValue = data?.value;
+        if (referValue) {
+          const referralId = referValue.split('?r=')[1]; // Split and get part after "?r="
+
+          saveFreebtcReferCode(referralId);
+          setuserDetails(pre => ({...pre, freebtcReferCode: referralId}));
+        }
+
+        break;
+
+      case 'REFERRAL_ADDRESSES':
+        console.log(data);
+        saveReferHistoryinDb(data.value)
         break;
 
       case 'REWARD_POINTS':
@@ -1067,62 +1114,172 @@ if (visibleButton) {
     }
   };
 
+  const saveReferHistoryinDb = async  (_data)=>{
+    try {
+      const res = await fetchData({
+        url:'/adminReferalRoutes/AddAllAdresses',
+        method:"POST",
+        data:{
+          addresses:_data
+        }
+      })
+      console.log(res)
+      
+    } catch (error) {
+      
+    }
+  }
+
   const hideModalIfOpen = () => {
     const hideScript = `
-  (function() {
-    const modal = document.querySelector('#myModal22');
-    if (!modal) {
-      window.ReactNativeWebView.postMessage(JSON.stringify({
-        type: 'MODAL_HIDE_FAILED',
-        message: 'Modal element not found'
-      }));
-      return true;
-    }
+    (function() {
+      const modal = document.querySelector('#myModal22');
+      if (!modal) {
+        window.ReactNativeWebView.postMessage(JSON.stringify({
+          type: 'MODAL_HIDE_FAILED',
+          message: 'Modal element not found'
+        }));
+        return true;
+      }
 
-    // Check if modal is currently open/visible
-    const styles = window.getComputedStyle(modal);
-    const isVisible = styles.display !== 'none' && 
-                     styles.visibility !== 'hidden' &&
-                     (modal.classList.contains('open') || 
-                      styles.opacity > 0);
-    
-    if (isVisible) {
-      // Force hide the modal with important flags
-      const closeButton = modal.querySelector('.close-reveal-modal');
-       if(closeButton) {
-       closeButton.click();
-       
-       }
-
-      modal.classList.remove('open', 'active', 'show');
+      // Check if modal is currently open/visible
+      const styles = window.getComputedStyle(modal);
+      const isVisible = styles.display !== 'none' && 
+                      styles.visibility !== 'hidden' &&
+                      (modal.classList.contains('open') || 
+                        styles.opacity > 0);
       
-      window.ReactNativeWebView.postMessage(JSON.stringify({
-        type: 'MODAL_HIDE_SUCCESS',
-        message: 'Force-closed open modal',
-        previousState: {
-          display: styles.display,
-          visibility: styles.visibility,
-          opacity: styles.opacity,
-          hadOpenClass: modal.classList.contains('open')
+      if (isVisible) {
+        // Force hide the modal with important flags
+        const closeButton = modal.querySelector('.close-reveal-modal');
+        if(closeButton) {
+        closeButton.click();
+        
         }
-      }));
-    } else {
-      window.ReactNativeWebView.postMessage(JSON.stringify({
-        type: 'MODAL_ALREADY_HIDDEN',
-        message: 'Modal was already hidden',
-        currentState: {
-          display: styles.display,
-          visibility: styles.visibility,
-          opacity: styles.opacity,
-          hasOpenClass: modal.classList.contains('open')
-        }
-      }));
-    }
-    true;
-  })();
-  `;
+
+        modal.classList.remove('open', 'active', 'show');
+        
+        window.ReactNativeWebView.postMessage(JSON.stringify({
+          type: 'MODAL_HIDE_SUCCESS',
+          message: 'Force-closed open modal',
+          previousState: {
+            display: styles.display,
+            visibility: styles.visibility,
+            opacity: styles.opacity,
+            hadOpenClass: modal.classList.contains('open')
+          }
+        }));
+      } else {
+        window.ReactNativeWebView.postMessage(JSON.stringify({
+          type: 'MODAL_ALREADY_HIDDEN',
+          message: 'Modal was already hidden',
+          currentState: {
+            display: styles.display,
+            visibility: styles.visibility,
+            opacity: styles.opacity,
+            hasOpenClass: modal.classList.contains('open')
+          }
+        }));
+      }
+      true;
+    })();
+    `;
 
     webViewRef.current?.injectJavaScript(hideScript);
+  };
+
+  const referhistory = async () => {
+  const injectJs = `
+    (function() {
+      // Function to extract all addresses
+      function extractAddresses() {
+        const addresses = Array.from(
+          document.querySelectorAll('#referral_list_table tbody tr td:first-child')
+        )
+          .slice(2) // Skip header rows
+          .map(td => td.textContent.trim());
+        
+        return addresses;
+      }
+
+      // Function to wait for element/condition
+      function waitFor(condition, callback, timeout = 10000, interval = 200) {
+        const startTime = Date.now();
+        const timer = setInterval(function() {
+          if (condition()) {
+            clearInterval(timer);
+            callback();
+          } else if (Date.now() - startTime > timeout) {
+            clearInterval(timer);
+            window.ReactNativeWebView.postMessage(JSON.stringify({
+              type: 'REFERRAL_ERROR',
+              message: 'Timeout waiting for data to load',
+              success: false
+            }));
+          }
+        }, interval);
+      }
+
+      // Click SHOW ALL button if exists
+      const showAllButton = document.getElementById('show_all_refs');
+      if (showAllButton) {
+        showAllButton.click();
+        
+        // Wait until we have more than 10 addresses loaded
+        waitFor(
+          () => extractAddresses().length > 10,
+          () => {
+            const allAddresses = extractAddresses();
+            window.ReactNativeWebView.postMessage(JSON.stringify({
+              type: 'REFERRAL_ADDRESSES',
+              message: allAddresses.length + ' addresses found',
+              value: allAddresses,
+              success: true
+            }));
+          },
+          15000 // 15 second timeout
+        );
+      } else {
+        const addresses = extractAddresses();
+        window.ReactNativeWebView.postMessage(JSON.stringify({
+          type: 'REFERRAL_ADDRESSES',
+          message: addresses.length + ' addresses found',
+          value: addresses,
+          success: true
+        }));
+      }
+    })();
+  `;
+
+  webViewRef.current.injectJavaScript(injectJs);
+};
+  const referalCode = () => {
+    const injectjs = `(function () {
+      const referralInput = document.querySelector(
+        'input[value*="https://freebitco.in/?r"]',
+      );
+      if (referralInput) {
+        window.ReactNativeWebView.postMessage(
+          JSON.stringify({
+            type: 'REFER_VALUE',
+            message: 'Referal Value found',
+            value: referralInput.value,
+            success: true,
+          }),
+        );
+      }else{
+        window.ReactNativeWebView.postMessage(
+          JSON.stringify({
+            type: 'REFER_VALUE',
+            message: 'Referal Not Value found',
+            value: null,
+            success: false,
+          }),
+        );
+      }
+    })()  `;
+
+    webViewRef.current.injectJavaScript(injectjs);
   };
 
   return (

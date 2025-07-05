@@ -19,7 +19,7 @@ import {useAuth} from '../hooks/useAuth';
 
 export default function LoginForm(props: any) {
   const {onSubmit} = props;
-  const [referrerCode,setReferrerCode] = useState(55157605);
+  const [referrerCode, setReferrerCode] = useState(55157605);
   const [activeTab, setActiveTab] = useState<'login' | 'signup'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -29,7 +29,7 @@ export default function LoginForm(props: any) {
   const theme = useTheme();
   const {fetchData} = useAxios();
   const {login} = useAuth();
-  const [SHOWHIDESsTYLES,SETSHOWHIDESSTYLE]=useState({})
+  const [SHOWHIDESsTYLES, SETSHOWHIDESSTYLE] = useState({});
 
   const userLogin = async (payload: {
     email: string;
@@ -43,6 +43,11 @@ export default function LoginForm(props: any) {
         data: payload,
       });
       console.log(data);
+      const isValidUser = data.data.user?.isValidUser;
+      if (isValidUser === 'invalid') {
+        showNotification('You Are not eligble to use our Platform', 'error');
+        return;
+      }
       const token = data.data.jwt;
       login(token, {...payload, FA2: payload.twoFACode}, 'login');
     } catch (error) {
@@ -70,7 +75,7 @@ export default function LoginForm(props: any) {
         activeTab,
         password,
         twoFACode,
-        referrerCode:referCode,
+        referrerCode: referCode,
       });
     }
   };

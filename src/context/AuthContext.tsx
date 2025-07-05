@@ -46,7 +46,8 @@ type User = {
   id: string;
   profileImage?:string;
   withdrawalAddress?:string,
-  addressAdded?:boolean
+  addressAdded?:boolean,
+  freebtcReferCode:string | null | any,
 };
 
 interface credentials {

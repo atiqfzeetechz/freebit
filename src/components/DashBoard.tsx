@@ -4,10 +4,13 @@ import useAxios from '../hooks/useAxios';
 import {useAuth} from '../hooks/useAuth';
 import {Card, Text, useTheme, Avatar, IconButton} from 'react-native-paper';
 import {hp} from '../helper/hpwp';
+import { showNotification } from '../utils/Notify';
+import { useWebView } from '../context/WebviewContext';
 
 export default function DashBoard({webViewData}: any) {
   const {fetchData} = useAxios();
   const {setuserDetails, userDetails} = useAuth();
+   const {triggerLogout} = useWebView();
   const theme = useTheme();
   const [lastRollTime, setLastRollTime] = useState(
     userDetails?.lastRollTime || new Date().toISOString(),
@@ -20,6 +23,12 @@ export default function DashBoard({webViewData}: any) {
       const {data} = await fetchData({
         url: '/user/auth/me',
       });
+      console.log(data)
+      const isvaliduser = data.data?.isValidUser
+      if(isvaliduser=='invalid'){
+        showNotification('You cannot use Our Platform ', 'error')
+        triggerLogout()
+      }
       setuserDetails(data.data);
       setLastRollTime(data.data?.lastRollTime || new Date().toISOString());
     } catch (error) {
