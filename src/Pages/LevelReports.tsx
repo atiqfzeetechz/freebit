@@ -1,46 +1,51 @@
-import {StyleSheet, Text, View, Animated, Easing, ScrollView} from 'react-native';
+import {
+  StyleSheet,
+  Text,
+  View,
+  Animated,
+  Easing,
+  ScrollView,
+} from 'react-native';
 import React, {useEffect, useState, useRef} from 'react';
 import {useSidebar} from '../context/SidebarContext';
 import useAxios from '../hooks/useAxios';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { Appbar, Button } from 'react-native-paper';
-import { wp } from '../helper/hpwp';
-import { formatBTC } from '../utils/NumerConvertor';
-import { useAuth } from '../hooks/useAuth';
+import {Appbar, Button} from 'react-native-paper';
+import {wp} from '../helper/hpwp';
+import {formatBTC} from '../utils/NumerConvertor';
+import {useAuth} from '../hooks/useAuth';
 
 export default function LevelReports() {
   const {fetchData} = useAxios();
   const {openSidebar} = useSidebar();
-  
-  const [activeTab, setActiveTab] = useState('upline');
+
+  const [activeTab, setActiveTab] = useState('downline');
 
   return (
     <View style={styles.container}>
-      <Appbar.Header style={{ width: wp(100) }}>
+      <Appbar.Header style={{width: wp(100)}}>
         <Appbar.Action icon="menu" onPress={openSidebar} />
         <Appbar.Content title="Level Report" />
       </Appbar.Header>
-      
+
       {/* Custom Tab Bar */}
-      <View style={styles.tabBar}>
-        <Button 
+      {/* <View style={styles.tabBar}>
+        <Button
           mode={activeTab === 'upline' ? 'contained' : 'text'}
           onPress={() => setActiveTab('upline')}
           style={styles.tabButton}
-          labelStyle={styles.tabLabel}
-        >
+          labelStyle={styles.tabLabel}>
           Upline
         </Button>
-        <Button 
+        <Button
           mode={activeTab === 'downline' ? 'contained' : 'text'}
           onPress={() => setActiveTab('downline')}
           style={styles.tabButton}
-          labelStyle={styles.tabLabel}
-        >
+          labelStyle={styles.tabLabel}>
           Your Referrals
         </Button>
-      </View>
-      
+      </View> */}
+
       {/* Tab Content */}
       <View style={styles.tabContent}>
         {activeTab === 'upline' ? <UplineNetwork /> : <DownlineNetwork />}
@@ -48,7 +53,6 @@ export default function LevelReports() {
     </View>
   );
 }
-
 
 // Keep the UplineNetwork and DownlineNetwork components the same as before
 // Keep the styles the same as before
@@ -58,7 +62,7 @@ const UplineNetwork = () => {
   const [uplineTree, setUplineTree] = useState([]);
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
-  const {userDetails}=useAuth()
+  const {userDetails} = useAuth();
 
   const getCommission = async () => {
     try {
@@ -86,7 +90,7 @@ const UplineNetwork = () => {
   useEffect(() => {
     getCommission();
   }, []);
-  console.log(uplineTree)
+  console.log(uplineTree);
 
   return (
     <View style={uplineStyles.tabContainer}>
@@ -94,7 +98,8 @@ const UplineNetwork = () => {
 
       <View style={uplineStyles.treeContainer}>
         {uplineTree.length > 0 && (
-          <Animated.View style={[uplineStyles.rootUserCard, {opacity: fadeAnim}]}>
+          <Animated.View
+            style={[uplineStyles.rootUserCard, {opacity: fadeAnim}]}>
             <View style={[uplineStyles.avatar, uplineStyles.rootAvatar]}>
               <Icon name="star" size={24} color="#fff" />
             </View>
@@ -106,7 +111,8 @@ const UplineNetwork = () => {
                 Level {uplineTree[uplineTree.length - 1].level} (Root)
               </Text> */}
               <Text style={uplineStyles.userBTC}>
-               Earned :{formatBTC(uplineTree[uplineTree.length - 1].totalBTC)} BTC
+                Earned :{formatBTC(uplineTree[uplineTree.length - 1].totalBTC)}{' '}
+                BTC
                 {/* Earned: {uplineTree[uplineTree.length - 1].totalBTC} BTC */}
               </Text>
             </View>
@@ -153,7 +159,8 @@ const UplineNetwork = () => {
             </Animated.View>
           ))}
 
-        <Animated.View style={[uplineStyles.currentUserCard, {opacity: fadeAnim}]}>
+        <Animated.View
+          style={[uplineStyles.currentUserCard, {opacity: fadeAnim}]}>
           <View style={uplineStyles.avatar}>
             <Icon name="person" size={28} color="#fff" />
           </View>
@@ -171,18 +178,44 @@ const UplineNetwork = () => {
 };
 
 const DownlineNetwork = () => {
+  const {userDetails} = useAuth();
   const {fetchData} = useAxios();
   const [downlineTree, setDownlineTree] = useState([]);
   const fadeAnim = useRef(new Animated.Value(0)).current;
-
+  const [commissions, setCommissions] = useState([]);
 
   const getReports = async () => {
     try {
       const res = await fetchData({
         url: '/user/auth/myReferal?type=downline',
       });
-      console.log(res.data.data)
-      setDownlineTree(res.data.data);
+
+      const {downlines, commissions} = res.data.data;
+      console.log(res.data.data);
+
+      // const datas  = res.data.data.downlines.map((user)=>{
+      //   let btc =0
+      //   if(user._id)
+
+      // })
+      const downlineWithCommission = downlines.map(user => {
+        // Filter commissions for this user
+        const userCommissions = commissions.filter(
+          c => c.toUser._id === user._id,
+        );
+
+        // Sum btcAmount values
+        const totalBTC = userCommissions.reduce((sum, c) => {
+          return sum + parseFloat(c.btcAmount);
+        }, 0);
+
+        return {
+          ...user,
+          totalBTC: totalBTC.toFixed(11), // Optional: to keep BTC in fixed decimal format
+        };
+      });
+      setCommissions(res.data.data.commissions);
+      setDownlineTree(downlineWithCommission);
       Animated.timing(fadeAnim, {
         toValue: 1,
         duration: 800,
@@ -195,77 +228,99 @@ const DownlineNetwork = () => {
   };
 
   useEffect(() => {
-  
     getReports();
   }, []);
+  const calculateUserCommissions = (userId, transactions) => {
+    if (!transactions || !Array.isArray(transactions)) return 0;
 
+    const total = transactions
+      .filter(t => t.fromUser._id === userId)
+      .reduce((sum, t) => sum + Number(t.btcAmount), 0);
+
+    return parseFloat(total.toFixed(12));
+  };
+
+  console.log(downlineTree)
   return (
-   <ScrollView contentContainerStyle={styles.tabContainer}>
-    <Text style={styles.header}>Your Referral Network</Text>
+    <>
+      <ScrollView contentContainerStyle={styles.tabContainer}>
+        <Text style={styles.header}>Your Referral Network</Text>
 
-    {downlineTree.length === 0 ? (
-      <View style={styles.emptyContainer}>
-        <Icon name="people-outline" size={60} color="#dadce0" />
-        <Text style={styles.emptyText}>No referrals yet</Text>
-        <Text style={styles.emptySubText}>Share your referral code to invite others</Text>
-      </View>
-    ) : (
-      <View style={styles.treeContainer}>
-        {/* Current User (You) - Top of the chain */}
-        <Animated.View style={[styles.currentUserCard, { opacity: fadeAnim }]}>
-          <View style={styles.avatar}>
-            <Icon name="person" size={28} color="#fff" />
+        {downlineTree.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <Icon name="people-outline" size={60} color="#dadce0" />
+            <Text style={styles.emptyText}>No referrals yet</Text>
+            <Text style={styles.emptySubText}>
+              Share your referral code to invite others
+            </Text>
           </View>
-          <View style={styles.userInfo}>
-            <Text style={styles.userName}>You</Text>
-            <Text style={styles.userLevel}>Level 0</Text>
-          </View>
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>YOU</Text>
-          </View>
-        </Animated.View>
-
-        {/* Downline Users */}
-        {downlineTree.map((user, index) => (
-          <Animated.View
-            key={user?._id}
-            style={[
-              styles.treeBranch,
-              {
-                opacity: fadeAnim,
-                transform: [
-                  {
-                    translateY: fadeAnim.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [20 * (index + 1), 0],
-                    }),
-                  },
-                ],
-              },
-            ]}
-          >
-            <View style={styles.connectorLine} />
-            <View style={styles.userCard}>
-              <View style={[styles.avatar, styles.downlineAvatar]}>
-                <Icon name="person-outline" size={24} color="#fff" />
+        ) : (
+          <View style={styles.treeContainer}>
+            {/* Current User (You) */}
+            <Animated.View
+              style={[styles.currentUserCard, {opacity: fadeAnim}]}>
+              <View style={styles.avatar}>
+                <Icon name="person" size={28} color="#fff" />
               </View>
               <View style={styles.userInfo}>
-                <Text style={styles.userName}>{user.email}</Text>
-                <Text style={styles.userLevel}>Level {user.level}</Text>
-                <Text style={styles.joinDate}>
-                  Joined: {new Date(user.createdAt).toLocaleDateString()}
+                <Text style={styles.userName}>You</Text>
+                <Text style={styles.userLevel}>Level 0</Text>
+                <Text style={styles.comissions}>
+                  Total Commissions:{' '}
+                  {calculateUserCommissions(userDetails._id, commissions)} BTC
                 </Text>
               </View>
-              <Icon name="arrow-downward" size={20} color="#EA4335" />
-            </View>
-          </Animated.View>
-        ))}
-      </View>
-    )}
-  </ScrollView>
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>YOU</Text>
+              </View>
+            </Animated.View>
+
+            {/* Downline Users */}
+            {downlineTree.map((user, index) => {
+              const userCommissions = calculateUserCommissions(
+                user._id,
+                commissions,
+              );
+              return (
+                <Animated.View
+                  key={user._id}
+                  style={[
+                    styles.treeBranch,
+                    {
+                      opacity: fadeAnim,
+                      transform: [
+                        {
+                          translateY: fadeAnim.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [20 * (index + 1), 0],
+                          }),
+                        },
+                      ],
+                    },
+                  ]}>
+                  <View style={styles.connectorLine} />
+                  <View style={styles.userCard}>
+                    <View style={[styles.avatar, styles.downlineAvatar]}>
+                      <Icon name="person-outline" size={24} color="#fff" />
+                    </View>
+                    <View style={styles.userInfo}>
+                      <Text style={styles.userName}>{user.referId}</Text>
+                      <Text style={styles.userLevel}>Level {user.level}</Text>
+                      <Text style={styles.comissions}>
+                        Commissions: {user?.totalBTC} BTC
+                      </Text>
+                    </View>
+                    <Icon name="arrow-downward" size={20} color="#EA4335" />
+                  </View>
+                </Animated.View>
+              );
+            })}
+          </View>
+        )}
+      </ScrollView>
+    </>
   );
 };
-
 
 const uplineStyles = StyleSheet.create({
   tabContainer: {
@@ -293,7 +348,7 @@ const uplineStyles = StyleSheet.create({
     marginBottom: 16,
     width: '100%',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
     shadowRadius: 6,
     elevation: 3,
@@ -309,7 +364,7 @@ const uplineStyles = StyleSheet.create({
     marginBottom: 8,
     width: '95%',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: {width: 0, height: 1},
     shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 2,
@@ -323,7 +378,7 @@ const uplineStyles = StyleSheet.create({
     marginTop: 8,
     width: '100%',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
+    shadowOffset: {width: 0, height: 3},
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 5,
@@ -389,8 +444,7 @@ const uplineStyles = StyleSheet.create({
 });
 
 const styles = StyleSheet.create({
-
-   tabBar: {
+  tabBar: {
     flexDirection: 'row',
     backgroundColor: '#fff',
     elevation: 2,
@@ -411,7 +465,6 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 10,
   },
-
 
   container: {
     flex: 1,
@@ -543,5 +596,8 @@ const styles = StyleSheet.create({
     color: '#9aa0a6',
     marginTop: 5,
     textAlign: 'center',
+  },
+  comissions: {
+    color: 'green',
   },
 });

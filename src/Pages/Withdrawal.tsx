@@ -35,7 +35,7 @@ type WithdrawalItem = {
   createdAt: string;
 };
 
-const MIN_BTC = '30000';
+const MIN_BTC = '0.00030000 ';
 
 const Withdrawal = () => {
   const theme = useTheme();
@@ -173,7 +173,7 @@ const Withdrawal = () => {
                     <Text style={styles.balanceLabel}>Available Balance</Text>
                   </View>
                   <Text style={styles.balanceAmount}>
-                    ₹{ourWallet}
+                    ₹{ourWallet?.toFixed(11)}
                   </Text>
                 </Card.Content>
               </Card>

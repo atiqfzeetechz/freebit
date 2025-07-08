@@ -47,6 +47,9 @@ export default function LoginForm(props: any) {
       if (isValidUser === 'invalid') {
         showNotification('You Are not eligble to use our Platform', 'error');
         return;
+      } if (data.data.user?.isActive===false) {
+        showNotification('You have been blocked ', 'error');
+        return;
       }
       const token = data.data.jwt;
       login(token, {...payload, FA2: payload.twoFACode}, 'login');
