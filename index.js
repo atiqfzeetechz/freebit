@@ -20,7 +20,7 @@ AppRegistry.registerComponent(appName, () => Main);
 
 
 
-
+// scng
 /// BackgroundFetch Android Headless Event Receiver.
 /// Called when the Android app is terminated.
 ///
