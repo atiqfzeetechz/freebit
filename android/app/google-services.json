@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "982297326463",
+    "project_id": "freebit-ad84c",
+    "storage_bucket": "freebit-ad84c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:982297326463:android:ea1c2fbecc0558fc6b204a",
+        "android_client_info": {
+          "package_name": "com.freebit"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA50vu3-pCGDoDNjfdQjXAgoKqhyfYuKIk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

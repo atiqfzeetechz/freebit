@@ -9,7 +9,8 @@ interface FetchDataProps {
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
   data?: any;
   params?: any;
-  headers?:any
+  headers?: any;
+  loader?: boolean;
 }
 
 interface AxiosResponse<T = any> {
@@ -27,9 +28,9 @@ interface errorRes<T = any> {
   }[];
 }
 
-
-export const baseUrl =`https://backend.freebit.fzeetechz.com/api/v1`;
-export const imgUrl = `https://backend.freebit.fzeetechz.com`
+// export const baseUrl = `https://backend.freebit.fzeetechz.com/api/v1`;
+export const baseUrl = `http://192.168.1.46:5013/api/v1`;
+export const imgUrl = `https://backend.freebit.fzeetechz.com`;
 
 export default function useAxios() {
   const [error, setError] = useState<errorRes>();
@@ -49,23 +50,27 @@ export default function useAxios() {
     method = 'GET',
     data = null,
     params = null,
-    headers = {}
+    headers = {},
+    loader = false,
   }: FetchDataProps): Promise<AxiosResponse<T> | undefined> => {
+    console.log(`${baseUrl}${url}`, method);
     setError(null);
-    showLoader();
+    if (loader) {
+      showLoader();
+    }
 
     const config: AxiosRequestConfig = {
       url,
       method,
       data,
       params,
-      headers
+      headers,
     };
 
     try {
       const response = await instance.request<T>(config);
 
-      showNotification(response?.data?.message, 'success');
+      // showNotification(response?.data?.message, 'success');
 
       return {
         data: response.data,

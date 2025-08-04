@@ -22,11 +22,12 @@ export function validateEmail(email: any) {
 }
 
 export function ValidatePassword(password: any) {
+  console.log()
   if (!password) {
     showNotification('Password is Required', 'error');
     return false;
   }
-  if (password.length <  8) {
+  if (password.length <  6) {
     showNotification('Password length Must be 6 digit', 'error');
     return false;
   }

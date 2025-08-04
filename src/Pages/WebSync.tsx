@@ -1,4 +1,3 @@
-
 // import React, {useState, useRef} from 'react';
 // import {
 //   StyleSheet,
@@ -124,8 +123,6 @@
 
 // --------------------------------------------end------------------------------------------------------
 
-
-
 // ----------------------------------start--------------------------------------------------
 
 // import React from 'react';
@@ -135,7 +132,7 @@
 // const App = () => {
 //   return (
 //     <SafeAreaView style={styles.container}>
-//       <WebView 
+//       <WebView
 //         source={{ uri: 'https://freebitco.in/' }}
 //         style={styles.webview}
 //         javaScriptEnabled={true}
@@ -169,117 +166,157 @@
 
 // ------------------------------------------------------------end---------------------------------------------
 
-
-
 // ------------------------------------------------------------------start ----------------------
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, SafeAreaView, StatusBar, Alert } from 'react-native';
+import React, {useEffect, useState} from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  SafeAreaView,
+  StatusBar,
+  Alert,
+} from 'react-native';
 import useAxios from '../hooks/useAxios';
-import { useAuth } from '../hooks/useAuth';
-import { useWebView } from '../context/WebviewContext';
-import { IconButton } from 'react-native-paper';
-import { useLoader } from '../hooks/useLoader';
+import {useAuth} from '../hooks/useAuth';
+import {useWebView} from '../context/WebviewContext';
+import {IconButton} from 'react-native-paper';
+import {useLoader} from '../hooks/useLoader';
+import {useData} from '../hooks/useGlobalData';
+import {convertScientificToDecimal} from '../utils/NumerConvertor';
 
 const data = [
-  // { title: 'Balance (BTC)', value: '0.00 000 0096' },
-  // { title: 'Balance (FUN)', value: '600' },
-  // { title: 'Wallet Blance', value: '0.0000000034' },
-  // { title: 'Reward Points', value: '94 663 RP' },
-  // { title: 'WOF Spins', value: '272 WOF' },
-  // { title: 'Lottery', value: 'Disabled' },
-  // { title: '2FA Security', value: 'Enabled' },
-  // { title: 'Larger Bonuses', value: 'Enabled' },
-  // { title: 'Remove Captcha', value: '0.00 013 286' },
-  // { title: 'Next Roll', value: '38:11' },
-  { title: 'WOF Bonus', value: '00:00:00' },
-  { title: 'Free BTC Bonus', value: '00:00:00' },
-  { title: 'FUN Bonus', value: '00:00:00' },
-  { title: 'Lottery Bonus', value: '00:00:00' },
-  { title: 'Last Sync', value: '00:21:46' },
+
+  {title: 'WOF Bonus', value: '00:00:00'},
+  {title: 'Free BTC Bonus', value: '00:00:00'},
+  {title: 'FUN Bonus', value: '00:00:00'},
+  {title: 'Lottery Bonus', value: '00:00:00'},
+  // {title: 'Last Sync', value: '00:21:46'},
 ];
 
 
 const DashboardScreen = () => {
-
-const {fetchData} = useAxios();
-const [lavelBalance, setLavelBalance] = useState(0);
-const {setuserDetails, userDetails,btBalance, setBTbalance} = useAuth();
-const {SyncWebViewClick, setSyncWebViewclick} =useWebView()
-const {showLoader, hideLoader} = useLoader();
-const [countdown, setCountdown] = useState({ minutes: '00', seconds: '00' });
+ const {fetchData} = useAxios();
+  const {stats, setStats, lastSync, setLastSync} = useData();
+  const [lavelBalance, setLavelBalance] = useState(0);
+  const {setuserDetails, userDetails, btBalance, setBTbalance} = useAuth();
+  const {SyncWebViewClick, setSyncWebViewclick} = useWebView();
+  const {showLoader, hideLoader} = useLoader();
+  const [countdown, setCountdown] = useState({minutes: '00', seconds: '00'});
   const [timerInterval, setTimerInterval] = useState<NodeJS.Timeout | null>(null);
-console.log(userDetails)
-console.log(btBalance)
-const myReferral = async () => {
+  const [lastSyncDisplay, setLastSyncDisplay] = useState('Never synced');
+
+  // const [lastSync,setlastSync]=useState('')
+
+
+ const formatLastSync = (syncTime: string) => {
+  if (!syncTime) return "Never synced";
   
+  const lastSync = new Date(syncTime);
+  const now = new Date();
+  const diffInSeconds = Math.floor((now - lastSync) / 1000);
+  const diffInMinutes = Math.floor(diffInSeconds / 60);
+  const remainingSeconds = diffInSeconds % 60;
+  
+  if (diffInSeconds < 60) {
+    return "Just now";
+  } else if (diffInMinutes < 60) {
+    return `${diffInMinutes}:${remainingSeconds} `;
+  } else {
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    const remainingMinutes = diffInMinutes % 60;
+    return `${diffInHours}:${remainingMinutes}:${remainingSeconds}`;
+  }
+};
+
+const updateLastSyncDisplay = () => {
+  if (lastSync) {
+    setLastSyncDisplay(formatLastSync(lastSync));
+  }
+};
+
+useEffect(() => {
+  updateLastSyncDisplay(); // Initial update
+  
+  // Update every second for more accurate timing
+  const interval = setInterval(() => {
+    updateLastSyncDisplay();
+  }, 1000); // Update every second
+  
+  return () => clearInterval(interval); // Cleanup on unmount
+}, [lastSync]);
+
+
+  const myReferral = async () => {
     try {
       const response = await fetchData({
         url: `/user/income/distributeincom/${userDetails?.email}`,
       });
-      console.log(response)
-      
+      console.log(response);
+
       // if (response.data?.success) {
-        setLavelBalance(response?.data?.wallet?.balance || 0);
+      setLavelBalance(response?.data?.wallet?.balance || 0);
+      // console.log(response?.data?.wallet?.balance)
       // }
     } catch (error) {
-      console.log(error)
+      console.log(error);
       // setSnackbarMessage('Failed to fetch referral data');
       // setVisibleSnackbar(true);
     }
-   
   };
 
-useEffect(()=>{
-  myReferral()
-},[SyncWebViewClick])
+  useEffect(() => {
+    myReferral();
+  }, [SyncWebViewClick]);
 
-function syncReCallwebView(){
-  showLoader()
-  setSyncWebViewclick(SyncWebViewClick + 1)
-}
+  function syncReCallwebView() {
+    showLoader();
+    setSyncWebViewclick(SyncWebViewClick + 1);
+    const timestamp = new Date().toISOString(); // or use new Date().toLocaleString()
+    console.log('Sync clicked at:', timestamp);
+    setLastSync(timestamp)
+     setLastSyncDisplay("Just now")
+  }
 
-
-
-useEffect(() => {
+  useEffect(() => {
     if (btBalance) {
       // Clear any existing interval
       if (timerInterval) clearInterval(timerInterval);
-      
+
       // Set initial countdown values
-      setCountdown({ minutes: btBalance?.minutes, seconds: btBalance?.seconds });
-      
+      setCountdown({minutes: btBalance?.minutes, seconds: btBalance?.seconds});
+
       // Start decreasing the timer every second
       const interval = setInterval(() => {
         setCountdown(prev => {
           let mins = parseInt(prev.minutes);
           let secs = parseInt(prev.seconds);
-          
+
           // Decrease seconds
           secs -= 1;
-          
+
           // Handle minute rollover
           if (secs < 0) {
             mins -= 1;
             secs = 59;
           }
-          
+
           // Stop at zero
           if (mins < 0) {
             clearInterval(interval);
-            return { minutes: '00', seconds: '00' };
+            return {minutes: '00', seconds: '00'};
           }
-          
+
           return {
             minutes: mins.toString().padStart(2, '0'),
-            seconds: secs.toString().padStart(2, '0')
+            seconds: secs.toString().padStart(2, '0'),
           };
         });
       }, 1000);
-      
+
       setTimerInterval(interval);
       // ✅ Clean up on unmount or btBalance change
     }
- 
   }, [btBalance]);
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -288,11 +325,11 @@ useEffect(() => {
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.topRow}>
-        <Text style={styles.headerText}>Sync Details</Text>
-        <Text onPress={syncReCallwebView} style={styles.status}><IconButton
-  icon={'sync'}
-  /></Text>
-      </View>
+          <Text style={styles.headerText}>Sync Details</Text>
+          <Text onPress={syncReCallwebView} style={styles.status}>
+            <IconButton icon={'sync'} />
+          </Text>
+        </View>
         {/* <Text style={styles.headerText}>Sync Details</Text> */}
       </View>
 
@@ -312,95 +349,74 @@ useEffect(() => {
             </Text>
           </View>
         ))} */}
-        <View  style={styles.box} >
-            <Text style={styles.title} >Balance (BTC)</Text>
-            <Text
-              style={[
-                styles.value,
-                // item.value === 'Enabled' && styles.enabled,
-                // item.value === 'Disabled' && styles.disabled,
-              ]}
-            >
-              {btBalance?.balance}
-            </Text>
-          </View>
-        <View  style={styles.box} >
-            <Text style={styles.title} >Balance (FUN)</Text>
-            <Text
-              style={[
-                styles.value
-              ]}
-            >
-             114 
-            </Text>
-          </View>
-        <View  style={styles.box} >
-            <Text style={styles.title} >Balance (Wallet)</Text>
-            <Text
-              style={[
-                styles.value
-              ]}
-            >
-              {lavelBalance}
-            </Text>
-          </View>
-        <View  style={styles.box} >
-            <Text style={styles.title} >Reward Points</Text>
-            <Text
-              style={[
-                styles.value
-              ]}
-            >
-              4600 RP
-            </Text>
-          </View>
         <View style={styles.box}>
-      <View style={styles.topRow}>
-        <Text style={styles.title}>Lottery</Text>
-        <Text style={styles.status}>Disabled</Text>
-      </View>
-      <Text style={styles.value}>53 T</Text>
-    </View>
-        <View  style={styles.box} >
-            <Text style={styles.title} >2FA Security</Text>
-            <Text
-              style={[
-                styles.value,
-                userDetails?.is2FAEnabled === true && styles.enabled,
-                userDetails?.is2FAEnabled === false && styles.disabled,
-              ]}
-            >
-              {userDetails?.is2FAEnabled ? "Enabled" : "Disabled"}
+          <Text style={styles.title}>Balance (BTC)</Text>
+          <Text
+            style={[
+              styles.value,
+              // item.value === 'Enabled' && styles.enabled,
+              // item.value === 'Disabled' && styles.disabled,
+            ]}>
+            {btBalance?.balance}
+          </Text>
+        </View>
+        <View style={styles.box}>
+          <Text style={styles.title}>Balance (FUN)</Text>
+          <Text style={[styles.value]}>114</Text>
+        </View>
+        <View style={styles.box}>
+          <Text style={styles.title}>Balance (Wallet)</Text>
+          <Text style={[styles.value]}>
+            {convertScientificToDecimal(lavelBalance)}
+          </Text>
+        </View>
+        <View style={styles.box}>
+          <Text style={styles.title}>Reward Points</Text>
+          <Text style={[styles.value]}>{stats?.rewards} RP</Text>
+        </View>
+        <View style={styles.box}>
+          <View style={styles.topRow}>
+            <Text style={styles.title}>Lottery</Text>
+            <Text style={styles.status}>
+              {' '}
+              {stats.isLotteryDisbaled ? 'Disabled' : 'Enabled'}
             </Text>
           </View>
-        <View  style={styles.box} >
-            <Text style={styles.title} >Next Roll</Text>
-            <Text
-              style={[
-                styles.value
-              ]}
-            >
-              {`${countdown.minutes}:${countdown.seconds}`}
-              {/* {btBalance?.minutes} : {btBalance?.seconds} */}
-            </Text>
-          </View>
-        <View  style={styles.box} >
-           
-            <View style={styles.topRow}>
-            <Text style={styles.title} >Larger Bonuses</Text>
+          <Text style={styles.value}>{stats.tickets} T</Text>
+        </View>
+        <View style={styles.box}>
+          <Text style={styles.title}>2FA Security</Text>
+          <Text
+            style={[
+              styles.value,
+              stats.twoFaStatus === 'ENABLED' && styles.enabled,
+              stats.twoFaStatus === 'DISABLED' && styles.disabled,
+            ]}>
+            {stats.twoFaStatus}
+          </Text>
+        </View>
+        <View style={styles.box}>
+          <Text style={styles.title}>Next Roll</Text>
+          <Text style={[styles.value]}>
+            {`${countdown.minutes}:${countdown.seconds}`}
+            {/* {btBalance?.minutes} : {btBalance?.seconds} */}
+          </Text>
+        </View>
+        <View style={styles.box}>
+          <View style={styles.topRow}>
+            <Text style={styles.title}>Larger Bonuses</Text>
             <Text style={styles.status}>?</Text>
-            </View>
-            <Text
-              style={[
-                styles.value,
-               styles.enabled,
-                // userDetails?.is2FAEnabled === false && styles.disabled,
-              ]}
-            >
-              Enabled
-            </Text>
           </View>
-          {data.map((item, index) => (
+          <Text
+            style={[
+              styles.value,
+              styles.enabled,
+              // userDetails?.is2FAEnabled === false && styles.disabled,
+            ]}>
+            Enabled
+          </Text>
+        </View>
+        {data.map((item, index) => (
           <View key={index} style={styles.box}>
             <Text style={styles.title}>{item.title}</Text>
             <Text
@@ -408,12 +424,15 @@ useEffect(() => {
                 styles.value,
                 item.value === 'Enabled' && styles.enabled,
                 item.value === 'Disabled' && styles.disabled,
-              ]}
-            >
+              ]}>
               {item.value}
             </Text>
           </View>
         ))}
+         <View style={styles.box}>
+          <Text style={styles.title}>Last Sync </Text>
+          <Text style={[styles.value]}>{lastSyncDisplay}</Text>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -423,6 +442,7 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: '#f2f4f8',
+    marginTop:StatusBar.currentHeight
   },
   header: {
     backgroundColor: '#fff',
@@ -450,7 +470,7 @@ const styles = StyleSheet.create({
     elevation: 2,
     shadowColor: '#000',
     shadowOpacity: 0.1,
-    shadowOffset: { width: 1, height: 2 },
+    shadowOffset: {width: 1, height: 2},
     shadowRadius: 4,
   },
   title: {
@@ -462,7 +482,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginTop: 8,
     marginBottom: 8,
-    textAlign:'center',
+    textAlign: 'center',
     color: '#222',
   },
   enabled: {
@@ -471,22 +491,20 @@ const styles = StyleSheet.create({
   disabled: {
     color: 'red',
   },
-  
+
   topRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
-  
+
   status: {
     fontSize: 14,
     fontWeight: 'bold',
     color: 'green',
   },
- 
 });
 
 export default DashboardScreen;
-
 
 // --------------------------------------------------------------------END--------------------------------------
 
@@ -497,7 +515,7 @@ export default DashboardScreen;
 
 // function WebSync() {
 //     const {webViewData, setWebViewData} = useWebView();
-  
+
 //   return (
 //     <View
 //             style={[

@@ -1,13 +1,13 @@
-import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Home from '../Home';
 import Profile from '../Profile';
-import Icon from 'react-native-vector-icons/MaterialIcons';
-import {AuthProvider} from '../../context/AuthContext';
+import { AuthProvider } from '../../context/AuthContext';
 import RollHistory from '../RollHistory';
 import WebSync from '../WebSync';
 import Refer from './Refer';
-import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
 import Withdrawal from '../Withdrawal';
+import Menu from '../Menu';
+import { Text } from 'react-native';
 
 const Tab = createBottomTabNavigator();
 
@@ -19,17 +19,16 @@ function MyTabs() {
         component={Home}
         options={{
           animation: 'shift',
-          tabBarIcon: () => <Icon name="home" size={30} color="gray"></Icon>,
+          tabBarIcon: () => <Text style={{ fontSize: 20 }}>🏠</Text>,
           headerShown: false,
         }}
       />
-
       <Tab.Screen
         name="RollHistory"
         component={RollHistory}
         options={{
           animation: 'shift',
-          tabBarIcon: () => <Icon name="history" size={30} color="gray"></Icon>,
+          tabBarIcon: () => <Text style={{ fontSize: 20 }}>📜</Text>,
           title: 'Roll History',
         }}
       />
@@ -38,47 +37,33 @@ function MyTabs() {
         component={WebSync}
         options={{
           animation: 'shift',
-          tabBarIcon: () => <Icon name="sync" size={30} color="gray"></Icon>,
+          tabBarIcon: () => <Text style={{ fontSize: 20 }}>🔁</Text>,
           headerShown: false,
         }}
       />
-     
       <Tab.Screen
         name="refer"
         component={Refer}
         options={{
-          title :"Refer & Earn",
+          title: 'Refer & Earn',
           tabBarLabel: 'Refer&Earn',
           animation: 'shift',
-          tabBarIcon: () => (
-            <FontAwesome6
-              name="people-group"
-              size={25}
-              color="gray"></FontAwesome6>
-          ),
+          tabBarIcon: () => <Text style={{ fontSize: 20 }}>👥</Text>,
         }}
       />
-       <Tab.Screen
-        name="Profile"
-        component={Profile}
+      <Tab.Screen
+        name="menu"
+        component={Menu}
         options={{
+          title: 'Menu',
+          headerShown: false,
+          tabBarLabel: 'Menu',
           animation: 'shift',
-          tabBarIcon: () => <Icon name="person" size={30} color="gray"></Icon>,
+          tabBarIcon: () => <Text style={{ fontSize: 20 }}>📋</Text>,
         }}
       />
-       <Tab.Screen
-        name="Withdrawal"
-        component={Withdrawal}
-        options={{
-          
-          animation: 'shift',
-          tabBarIcon: () => <Icon name="cash" size={30} color="gray"></Icon>,
-        }}
-        
-      />
-      
     </Tab.Navigator>
   );
 }
 
-export default MyTabs; // Only export here
+export default MyTabs;

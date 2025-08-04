@@ -22,7 +22,7 @@ import {
   Avatar,
 } from 'react-native-paper';
 import Clipboard from '@react-native-clipboard/clipboard';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+// import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {useAuth} from '../../hooks/useAuth';
 
 export default function Refer() {
@@ -41,6 +41,7 @@ export default function Refer() {
         url: '/user/auth/my-referrals',
       });
       if (response.data?.success) {
+        console.log(response.data.data)
         setReferralHistory(response.data.data);
       }
     } catch (error) {
@@ -163,11 +164,11 @@ export default function Refer() {
                 mode="text"
                 onPress={copyToClipboard}
                 style={styles.copyButton}>
-                <Icon
+                {/* <Icon
                   name="content-copy"
                   size={20}
                   color={theme.colors.primary}
-                />
+                /> */}
               </Button>
             </View>
           </View>
@@ -175,29 +176,29 @@ export default function Refer() {
           <View style={styles.stepsContainer}>
             <Title style={styles.howItWorks}>How It Works</Title>
             <View style={styles.step}>
-              <Icon
+              {/* <Icon
                 name="numeric-1-circle"
                 size={24}
                 color={theme.colors.primary}
-              />
+              /> */}
               <Text style={styles.stepText}>
                 Share your referral code with friends
               </Text>
             </View>
             <View style={styles.step}>
-              <Icon
+              {/* <Icon
                 name="numeric-2-circle"
                 size={24}
                 color={theme.colors.primary}
-              />
+              /> */}
               <Text style={styles.stepText}>They sign up using your code</Text>
             </View>
             <View style={styles.step}>
-              <Icon
+              {/* <Icon
                 name="numeric-3-circle"
                 size={24}
                 color={theme.colors.primary}
-              />
+              /> */}
               <Text style={styles.stepText}>You both earn rewards!</Text>
             </View>
           </View>
@@ -225,11 +226,11 @@ export default function Refer() {
             />
           ) : (
             <View style={styles.emptyHistory}>
-              <Icon
+              {/* <Icon
                 name="information-outline"
                 size={24}
                 color={theme.colors.text}
-              />
+              /> */}
               <Text style={styles.emptyText}>No referrals yet</Text>
             </View>
           )}
