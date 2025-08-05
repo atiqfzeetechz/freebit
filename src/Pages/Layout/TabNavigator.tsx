@@ -8,6 +8,7 @@ import Refer from './Refer';
 import Withdrawal from '../Withdrawal';
 import Menu from '../Menu';
 import { Text } from 'react-native';
+import Sync from '../../../assets/svg/sync.svg'
 
 const Tab = createBottomTabNavigator();
 
@@ -37,7 +38,10 @@ function MyTabs() {
         component={WebSync}
         options={{
           animation: 'shift',
-          tabBarIcon: () => <Text style={{ fontSize: 20 }}>🔁</Text>,
+          tabBarIcon: () => <Sync
+          height={30}
+          
+          />,
           headerShown: false,
         }}
       />

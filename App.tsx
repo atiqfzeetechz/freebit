@@ -20,7 +20,6 @@ export default function App() {
     <DataProvider>
       <LoaderProvider>
         <GlobalLoader></GlobalLoader>
-
         <AuthProvider>
           <WebViewProvider>
             <SidebarProvider>

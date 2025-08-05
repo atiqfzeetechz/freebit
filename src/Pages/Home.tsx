@@ -125,9 +125,7 @@ const Home = () => {
     checkPermission();
 
     // Cleanup notification on component unmount
-    return () => {
-      notifee.cancelAllNotifications();
-    };
+   
   }, []);
 
   useEffect(() => {

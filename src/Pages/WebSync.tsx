@@ -176,6 +176,7 @@ import {
   SafeAreaView,
   StatusBar,
   Alert,
+  TouchableOpacity,
 } from 'react-native';
 import useAxios from '../hooks/useAxios';
 import {useAuth} from '../hooks/useAuth';
@@ -184,6 +185,8 @@ import {IconButton} from 'react-native-paper';
 import {useLoader} from '../hooks/useLoader';
 import {useData} from '../hooks/useGlobalData';
 import {convertScientificToDecimal} from '../utils/NumerConvertor';
+import Sync from '../../assets/svg/sync.svg'
+import { wp } from '../helper/hpwp';
 
 const data = [
 
@@ -324,11 +327,24 @@ useEffect(() => {
 
       {/* Header */}
       <View style={styles.header}>
-        <View style={styles.topRow}>
+        <View style={[styles.topRow , {
+          width:wp(95),
+          // backgroundColor:"green"
+        }]}>
           <Text style={styles.headerText}>Sync Details</Text>
-          <Text onPress={syncReCallwebView} style={styles.status}>
-            <IconButton icon={'sync'} />
-          </Text>
+          <TouchableOpacity  onPress={syncReCallwebView}
+          style={{
+            // backgroundColor:"red",
+           marginRight:50
+          }}
+          >
+             <Sync
+          height={30}
+          width={30}
+          
+          />
+          </TouchableOpacity>
+        
         </View>
         {/* <Text style={styles.headerText}>Sync Details</Text> */}
       </View>
@@ -495,12 +511,14 @@ const styles = StyleSheet.create({
   topRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    width:wp(90)
   },
 
   status: {
     fontSize: 14,
     fontWeight: 'bold',
     color: 'green',
+    
   },
 });
 
