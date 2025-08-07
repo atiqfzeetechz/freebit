@@ -25,6 +25,7 @@ import {useSidebar} from '../context/SidebarContext';
 // import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {showNotification} from '../utils/Notify';
 import Toast from 'react-native-toast-message';
+import MenuSvg from '../../assets/svg/menu.svg'
 
 type WithdrawalItem = {
   id: string;
@@ -158,7 +159,13 @@ const Withdrawal = () => {
               <Toast position="top" swipeable topOffset={50} />
             </View>
             <Appbar.Header>
-              <Appbar.Action icon="menu" onPress={openSidebar} />
+                     <Appbar.Action icon={
+                       ()=><View>
+                         <MenuSvg width={25}  height={25}/>
+                       </View>
+                     }
+                       
+                       onPress={openSidebar} />
               <Appbar.Content title="Withdrawal" />
             </Appbar.Header>
 

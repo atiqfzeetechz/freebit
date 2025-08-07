@@ -542,7 +542,7 @@ if (visibleButton) {
       (function() {
         const loginButton = document.querySelector('.login_menu_button');
         if (loginButton) {
-          loginButton.click();
+          // loginButton.click();
           window.ReactNativeWebView.postMessage(JSON.stringify({
             type: 'login_button_clicked',
             success: true
@@ -662,7 +662,7 @@ if (visibleButton) {
           
           // Add slight delay to ensure everything is ready
           setTimeout(() => {
-            signUpButton.click();
+            // signUpButton.click();
           }, 500);
           
           // Clean up observer after submission
@@ -685,7 +685,7 @@ if (visibleButton) {
           message: 'Captcha already verified, submitting form'
         }));
         setTimeout(() => {
-          signUpButton.click();
+          // signUpButton.click();
         }, 500);
         observer.disconnect();
       }

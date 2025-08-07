@@ -5,6 +5,7 @@ import {useSidebar} from '../context/SidebarContext';
 import useAxios from '../hooks/useAxios';
 // import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import dayjs from 'dayjs';
+import MenuSvg from '../../assets/svg/menu.svg'
 
 export default function WReports() {
   const {openSidebar} = useSidebar();
@@ -110,7 +111,9 @@ export default function WReports() {
   return (
     <View style={[styles.container, {backgroundColor: theme.colors.background}]}>
       <Appbar.Header style={styles.header}>
-        <Appbar.Action icon="menu" onPress={openSidebar} />
+        <Appbar.Action icon={
+          ()=><MenuSvg width={25} height={25}/>
+        } onPress={openSidebar} />
         <Appbar.Content title="Withdrawal Reports" />
       </Appbar.Header>
 

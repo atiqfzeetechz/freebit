@@ -1,5 +1,4 @@
-// Sidebar.js
-import React from 'react';
+import React, { useState } from 'react';
 import {
   StyleSheet,
   Text,
@@ -10,13 +9,10 @@ import {
   Animated,
   Dimensions,
 } from 'react-native';
-// import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useNavigation } from '@react-navigation/native';
 import { useSidebar } from '../../context/SidebarContext';
 import { useWebView } from '../../context/WebviewContext';
 import useAxios from '../../hooks/useAxios';
-// import {useSidebar} from '../context/SidebarContext';
-// import {useWebView} from '../context/WebviewContext';
 
 const { width } = Dimensions.get('window');
 
@@ -26,7 +22,10 @@ export default function Sidebar() {
   const navigation = useNavigation();
   const { fetchData } = useAxios();
 
+  const [logoutModalVisible, setLogoutModalVisible] = useState(false);
+
   const handleLogout = async () => {
+    setLogoutModalVisible(false); // close modal first
     const res = await fetchData({
       url: `/user/auth/logout`,
       method: 'PUT',
@@ -37,9 +36,6 @@ export default function Sidebar() {
     if (res?.data.success) {
       triggerLogout();
     }
-    console.log(res);
-
-    return;
   };
 
   const menuItems = [
@@ -86,16 +82,14 @@ export default function Sidebar() {
                     style={styles.menuItem}
                     onPress={() => handleItemPress(route)}
                   >
-                    {/* <Icon name={icon} size={20} style={styles.menuIcon} /> */}
                     <Text style={styles.menuText}>{label}</Text>
                   </TouchableOpacity>
                 ))}
 
                 <TouchableOpacity
                   style={styles.menuItem}
-                  onPress={handleLogout}
+                  onPress={() => setLogoutModalVisible(true)}
                 >
-                  {/* <Icon name="logout" size={20} style={styles.menuIcon} /> */}
                   <Text style={styles.menuText}>Logout</Text>
                 </TouchableOpacity>
 
@@ -103,12 +97,37 @@ export default function Sidebar() {
                   style={styles.menuItem}
                   onPress={() => closeSidebar()}
                 >
-                  {/* <Icon name="close" size={20} style={styles.menuIcon} /> */}
                   <Text style={styles.menuText}>Close</Text>
                 </TouchableOpacity>
               </View>
             </TouchableWithoutFeedback>
           </Animated.View>
+
+          {/* Confirm Logout Modal */}
+          <Modal transparent visible={logoutModalVisible} animationType="fade">
+            <View style={styles.confirmOverlay}>
+              <View style={styles.confirmBox}>
+                <Text style={styles.confirmTitle}>Confirm Logout</Text>
+                <Text style={styles.confirmText}>Are you sure you want to logout?</Text>
+                <View style={styles.confirmButtons}>
+                  <TouchableOpacity
+                    style={[styles.confirmButton, { backgroundColor: '#6200ee' }]}
+                    onPress={handleLogout}
+                  >
+                    <Text style={styles.confirmButtonText}>Yes</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.confirmButton, { backgroundColor: '#ccc' }]}
+                    onPress={() => setLogoutModalVisible(false)}
+                  >
+                    <Text style={[styles.confirmButtonText, { color: '#000' }]}>
+                      No
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </Modal>
         </View>
       </TouchableWithoutFeedback>
     </Modal>
@@ -144,11 +163,47 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
   },
-  menuIcon: {
-    marginRight: 15,
-    color: '#6200ee',
-  },
   menuText: {
     fontSize: 16,
+  },
+  confirmOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  confirmBox: {
+    width: '80%',
+    backgroundColor: 'white',
+    borderRadius: 10,
+    padding: 25,
+    alignItems: 'center',
+    elevation: 10,
+  },
+  confirmTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  confirmText: {
+    fontSize: 16,
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  confirmButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  confirmButton: {
+    flex: 1,
+    padding: 12,
+    borderRadius: 8,
+    marginHorizontal: 5,
+    alignItems: 'center',
+  },
+  confirmButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
   },
 });

@@ -24,6 +24,9 @@ import {
 import Clipboard from '@react-native-clipboard/clipboard';
 // import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {useAuth} from '../../hooks/useAuth';
+import CopySvg from '../../../assets/svg/copy.svg'
+import ShareSvg from '../../../assets/svg/share.svg'
+import UserSvg from '../../../assets/svg/user.svg'
 
 export default function Refer() {
   const {fetchData} = useAxios();
@@ -38,7 +41,7 @@ export default function Refer() {
   const myReferral = async () => {
     try {
       const response = await fetchData({
-        url: '/user/auth/my-referrals',
+        url: '/user/auth/myReferal?type=downline',
       });
       if (response.data?.success) {
         console.log(response.data.data)
@@ -83,16 +86,20 @@ export default function Refer() {
   };
 
   const renderHistoryItem = ({item}) => (
-    <List.Item
+    <> 
+    {item.level== 1  && <List.Item
       title={item.email || 'New User'}
-      description={new Date(item.createdAt).toLocaleDateString()}
-      left={props => <List.Icon {...props} icon="account-plus" />}
-      right={props => (
-        <Text {...props} style={styles.rewardText}>
-          +{item.reward || '0'} points
-        </Text>
-      )}
-    />
+      description={item?.referId}
+      left={props => <List.Icon {...props} icon={()=><>
+      <UserSvg width={25} height={25}/>
+      </>} />}
+      // right={props => (
+      //   <Text {...props} style={styles.rewardText}>
+      //     +{item.reward || '0'} points
+      //   </Text>
+      // )}
+    />}
+    </>
   );
 
   return (
@@ -123,12 +130,12 @@ export default function Refer() {
           </View>
 
           <View style={styles.statsContainer}>
-            <View style={styles.statItem}>
+            {/* <View style={styles.statItem}>
               <Text style={styles.statValue}>
                 {userDetails?.rollCount || 0}
               </Text>
               <Text style={styles.statLabel}>Rolls</Text>
-            </View>
+            </View> */}
             <View style={styles.statItem}>
               <Text style={styles.statValue}>
                 {userDetails?.referralCount || 0}
@@ -137,7 +144,7 @@ export default function Refer() {
             </View>
             <View style={styles.statItem}>
               <Text style={styles.statValue}>
-                {userDetails?.wallet?.balance || '0.00000000'}
+                {referralHistory?.totalCommission || '0.00000000'}
               </Text>
               <Text style={styles.statLabel}>BTC Balance</Text>
             </View>
@@ -164,11 +171,8 @@ export default function Refer() {
                 mode="text"
                 onPress={copyToClipboard}
                 style={styles.copyButton}>
-                {/* <Icon
-                  name="content-copy"
-                  size={20}
-                  color={theme.colors.primary}
-                /> */}
+              <CopySvg height={30} width={30} />
+          
               </Button>
             </View>
           </View>
@@ -207,7 +211,10 @@ export default function Refer() {
             mode="contained"
             onPress={onShare}
             style={styles.shareButton}
-            icon="share-variant">
+            icon={()=>{
+              return     <ShareSvg height={30} width={30} />
+            }
+            }>
             Share Your Code
           </Button>
         </Card.Content>
@@ -217,9 +224,9 @@ export default function Refer() {
       <Card style={[styles.card, styles.historyCard]}>
         <Card.Content>
           <Title style={styles.historyTitle}>Your Referral History</Title>
-          {referralHistory.length > 0 ? (
+          {referralHistory?.downlines?.length > 0 ? (
             <FlatList
-              data={referralHistory}
+              data={referralHistory?.downlines}
               renderItem={renderHistoryItem}
               keyExtractor={item => item.id}
               scrollEnabled={false}
@@ -291,7 +298,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   statValue: {
-    fontSize: 18,
+    fontSize: 15,
     fontWeight: 'bold',
     marginBottom: 4,
   },

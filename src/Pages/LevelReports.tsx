@@ -14,6 +14,7 @@ import {Appbar, Button} from 'react-native-paper';
 import {wp} from '../helper/hpwp';
 import {formatBTC} from '../utils/NumerConvertor';
 import {useAuth} from '../hooks/useAuth';
+import MenuSvg from '../../assets/svg/menu.svg'
 
 export default function LevelReports() {
   const {fetchData} = useAxios();
@@ -24,7 +25,10 @@ export default function LevelReports() {
   return (
     <View style={styles.container}>
       <Appbar.Header style={{width: wp(100)}}>
-        <Appbar.Action icon="menu" onPress={openSidebar} />
+        <Appbar.Action icon={()=><MenuSvg
+        height={25}
+        width={25}
+        />} onPress={openSidebar} />
         <Appbar.Content title="Level Report" />
       </Appbar.Header>
 
@@ -183,72 +187,50 @@ const DownlineNetwork = () => {
   const [downlineTree, setDownlineTree] = useState([]);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const [commissions, setCommissions] = useState([]);
+  
+const getReports = async () => {
+  try {
+    const res = await fetchData({
+      url: '/user/auth/myReferal?type=downline',
+      loader: true
+    });
 
-  const getReports = async () => {
-    try {
-      const res = await fetchData({
-        url: '/user/auth/myReferal?type=downline',
-        loader:true
-      });
-      console.log(res);
+    const { downlines, commissions } = res.data.data;
 
-      const {downlines, commissions} = res.data.data;
-      //   console.log(res.data.data);
+    const downlineWithCommission = downlines.map(user => {
+      // Filter all commissions where this user is the source (fromUser)
+      const userCommissions = commissions.filter(
+        c => c.fromUser._id === user._id
+      );
 
-      //   const result = {};
+      // Sum btcAmount values for this user
+      const totalBTC = userCommissions.reduce((sum, c) => {
+        return sum + parseFloat(c.btcAmount);
+      }, 0);
 
-      //   commissions.forEach(entry => {
-      //     console.log(entry);
-      //     const toUserId = entry.toUser._id;
-      //     const btcAmount = parseFloat(entry.btcAmount);
+      return {
+        ...user,
+        totalBTC: totalBTC.toFixed(11)  // Format to 11 decimals
+      };
+    });
 
-      //     if (!result[toUserId]) {
-      //       result[toUserId] = 0;
-      //     }
+    // Sort users by level ascending
+    const sortedDownlines = downlineWithCommission.sort((a, b) => a.level - b.level);
 
-      //     result[toUserId] += btcAmount;
-      //   });
-      //   console.log(result);
+    setCommissions(commissions);
+    setDownlineTree(sortedDownlines);
 
-      //   const dN = downlineTree.map((user)=>{
-      //     return {
-      //       ...user ,
-
-      //     }
-      // })
-      // const datas  = res.data.data.downlines.map((user)=>{
-      //   let btc =0
-      //   if(user._id)
-
-      // })
-      const downlineWithCommission = downlines.map(user => {
-        // Filter commissions for this user
-        const userCommissions = commissions.filter(
-          c => c.toUser._id === user._id,
-        );
-
-        // Sum btcAmount values
-        const totalBTC = userCommissions.reduce((sum, c) => {
-          return sum + parseFloat(c.btcAmount);
-        }, 0);
-
-        return {
-          ...user,
-          totalBTC: totalBTC.toFixed(11), // Optional: to keep BTC in fixed decimal format
-        };
-      });
-      setCommissions(res.data.data.commissions);
-      setDownlineTree(downlineWithCommission);
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 800,
-        easing: Easing.out(Easing.exp),
-        useNativeDriver: true,
-      }).start();
-    } catch (error) {
-      console.error(error);
-    }
-  };
+    // Animate if needed
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 800,
+      easing: Easing.out(Easing.exp),
+      useNativeDriver: true,
+    }).start();
+  } catch (error) {
+    console.error(error);
+  }
+};
 
   useEffect(() => {
     getReports();

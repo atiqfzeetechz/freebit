@@ -25,6 +25,8 @@ import useAxios from '../hooks/useAxios';
 import NotFound from '../components/helper/NotFound';
 import Toast from 'react-native-toast-message';
 import {showNotification} from '../utils/Notify';
+import MenuSvg from '../../assets/svg/menu.svg'
+import PlusSvg from '../../assets/svg/plus.svg'
 
 // Mock data - replace with your actual data
 const withdrawalAddresses = [
@@ -401,9 +403,19 @@ export default function ChangeWithDrawlAddress() {
         <Toast position="top" swipeable topOffset={10} />
       </View>
       <Appbar.Header style={styles.header}>
-        <Appbar.Action icon="menu" onPress={openSidebar} />
+                <Appbar.Action icon={
+          ()=><View>
+            <MenuSvg width={25}  height={25}/>
+          </View>
+        }
+          
+          onPress={openSidebar} />
         <Appbar.Content title="Withdrawal Addresses" />
-        <Appbar.Action icon="plus" onPress={() => setShowAddModal(true)} />
+        <Appbar.Action icon={
+          ()=><View>
+            <PlusSvg width={25}  height={25}/>
+          </View>
+        } onPress={() => setShowAddModal(true)} />
       </Appbar.Header>
       {withdrawalAddresses.length ? (
         <ScrollView style={styles.content}>

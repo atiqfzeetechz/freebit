@@ -12,6 +12,7 @@ import {useWebView} from '../context/WebviewContext';
 import {Appbar} from 'react-native-paper';
 import {useSidebar} from '../context/SidebarContext';
 import useAxios from '../hooks/useAxios';
+import MenuSvg from '../../assets/svg/menu.svg'
 
 export default function Profile() {
   const navigation = useNavigation();
@@ -65,7 +66,13 @@ export default function Profile() {
         style={{
           width: wp(100),
         }}>
-        <Appbar.Action icon="menu" onPress={openSidebar} />
+        <Appbar.Action icon={
+          ()=><View>
+            <MenuSvg width={25}  height={25}/>
+          </View>
+        }
+          
+          onPress={openSidebar} />
         <Appbar.Content title="Profile" />
       </Appbar.Header>
       <UserProfile />
