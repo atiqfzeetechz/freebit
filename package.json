@@ -29,7 +29,6 @@
     "npm": "^11.5.2",
     "react": "19.1.0",
     "react-native": "^0.80.2",
-    "react-native-autostart": "^1.0.7",
     "react-native-background-actions": "^4.0.1",
     "react-native-gesture-handler": "^2.27.2",
     "react-native-image-picker": "^8.2.1",

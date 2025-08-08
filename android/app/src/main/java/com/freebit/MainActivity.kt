@@ -1,6 +1,5 @@
 package com.freebit
 
-import com.ssg.autostart.AutostartPackage
 
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
