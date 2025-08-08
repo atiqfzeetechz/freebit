@@ -146,7 +146,7 @@ export default function Refer() {
               <Text style={styles.statValue}>
                 {referralHistory?.totalCommission || '0.00000000'}
               </Text>
-              <Text style={styles.statLabel}>BTC Balance</Text>
+              <Text style={styles.statLabel}>Referal BTC Balance</Text>
             </View>
           </View>
         </Card.Content>
