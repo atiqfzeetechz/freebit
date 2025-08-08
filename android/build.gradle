@@ -1,22 +1,21 @@
 buildscript {
     ext {
-        buildToolsVersion = "35.0.0"
+        buildToolsVersion = "34.0.0"
         minSdkVersion = 24
-        compileSdkVersion = 35
-        targetSdkVersion = 35
-        ndkVersion = "27.1.12297006"        // ✅ Ensure this NDK is installed in Android SDK Manager
-        cmakeVersion = "3.22.1"             // ✅ Use this CMake version (adjust if needed)
-        kotlinVersion = "1.9.22"// ✅ Kotlin version compatible with AGP 8.0+
+        compileSdkVersion = 34
+        targetSdkVersion = 34
+        ndkVersion = "25.1.8937393"
+        kotlinVersion = "2.0.0"
     }
     repositories {
         google()
         mavenCentral()
     }
     dependencies {
-        classpath("com.android.tools.build:gradle:8.2.2") // ✅ Must be defined explicitly
-        classpath("com.facebook.react:react-native-gradle-plugin")
+        classpath("com.android.tools.build:gradle:8.4.1")
+        classpath("com.google.gms:google-services:4.4.1")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
-        classpath("com.google.gms:google-services:4.4.3") // ✅ For Firebase
+        classpath("com.facebook.react:react-native-gradle-plugin")
     }
 }
 

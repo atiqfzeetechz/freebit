@@ -32,7 +32,6 @@
                 </intent-filter>
             </service>
 
-            <!-- Optional: Required for Android 13+ for notifications -->
             <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
 
         </activity>
