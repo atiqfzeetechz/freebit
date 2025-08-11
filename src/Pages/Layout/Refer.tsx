@@ -6,10 +6,11 @@ import {
   FlatList,
   Share,
   RefreshControl,
+  TouchableOpacity,
 } from 'react-native';
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import useAxios from '../../hooks/useAxios';
-import {useIsFocused} from '@react-navigation/native';
+import { useIsFocused, useNavigation } from '@react-navigation/native';
 import {
   Card,
   Title,
@@ -23,20 +24,21 @@ import {
 } from 'react-native-paper';
 import Clipboard from '@react-native-clipboard/clipboard';
 // import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import {useAuth} from '../../hooks/useAuth';
-import CopySvg from '../../../assets/svg/copy.svg'
-import ShareSvg from '../../../assets/svg/share.svg'
-import UserSvg from '../../../assets/svg/user.svg'
+import { useAuth } from '../../hooks/useAuth';
+import CopySvg from '../../../assets/svg/copy.svg';
+import ShareSvg from '../../../assets/svg/share.svg';
+import UserSvg from '../../../assets/svg/user.svg';
 
 export default function Refer() {
-  const {fetchData} = useAxios();
+  const { fetchData } = useAxios();
   const isFocused = useIsFocused();
   const theme = useTheme();
   const [referralHistory, setReferralHistory] = useState([]);
   const [visibleSnackbar, setVisibleSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [refreshing, setRefreshing] = useState<boolean>(false);
-  const {userDetails} = useAuth();
+  const { userDetails } = useAuth();
+  const navigation = useNavigation()
 
   const myReferral = async () => {
     try {
@@ -44,7 +46,7 @@ export default function Refer() {
         url: '/user/auth/myReferal?type=downline',
       });
       if (response.data?.success) {
-        console.log(response.data.data)
+        console.log(response.data.data);
         setReferralHistory(response.data.data);
       }
     } catch (error) {
@@ -85,32 +87,43 @@ export default function Refer() {
     setRefreshing(false);
   };
 
-  const renderHistoryItem = ({item}) => (
-    <> 
-    {item.level== 1  && <List.Item
-      title={item.email || 'New User'}
-      description={item?.referId}
-      left={props => <List.Icon {...props} icon={()=><>
-      <UserSvg width={25} height={25}/>
-      </>} />}
-      // right={props => (
-      //   <Text {...props} style={styles.rewardText}>
-      //     +{item.reward || '0'} points
-      //   </Text>
-      // )}
-    />}
+  const renderHistoryItem = ({ item }) => (
+    <>
+      {item.level == 1 && (
+        <List.Item
+          title={item.email || 'New User'}
+          description={item?.referId}
+          left={props => (
+            <List.Icon
+              {...props}
+              icon={() => (
+                <>
+                  <UserSvg width={25} height={25} />
+                </>
+              )}
+            />
+          )}
+          // right={props => (
+          //   <Text {...props} style={styles.rewardText}>
+          //     +{item.reward || '0'} points
+          //   </Text>
+          // )}
+        />
+      )}
     </>
   );
 
+  
   return (
     <ScrollView
       contentContainerStyle={[
         styles.container,
-        {backgroundColor: theme.colors.background},
+        { backgroundColor: theme.colors.background },
       ]}
       refreshControl={
         <RefreshControl onRefresh={handleRefresh} refreshing={refreshing} />
-      }>
+      }
+    >
       {/* User Profile Card */}
       <Card style={styles.card}>
         <Card.Content>
@@ -130,12 +143,6 @@ export default function Refer() {
           </View>
 
           <View style={styles.statsContainer}>
-            {/* <View style={styles.statItem}>
-              <Text style={styles.statValue}>
-                {userDetails?.rollCount || 0}
-              </Text>
-              <Text style={styles.statLabel}>Rolls</Text>
-            </View> */}
             <View style={styles.statItem}>
               <Text style={styles.statValue}>
                 {userDetails?.referralCount || 0}
@@ -149,6 +156,31 @@ export default function Refer() {
               <Text style={styles.statLabel}>Referal BTC Balance</Text>
             </View>
           </View>
+          <TouchableOpacity
+            style={[
+              styles.statItem,
+              {
+                // backgroundColor:"gray",
+                maxWidth: 150,
+                alignSelf:"center"
+              },
+            ]}
+            onPress={() => {
+              // Handle the press event here
+              console.log('Teams pressed');
+              // You might want to navigate to a teams screen:
+              // navigation.navigate('Teams');
+            }}
+          >
+            
+            <Text style={styles.statValue}>
+             Your Team ({referralHistory?.downlines?.length || 0} )
+            </Text>
+            <Button mode="contained" onPress={() => navigation.navigate('levelreports')}>
+              Details ⏩
+            </Button>
+
+          </TouchableOpacity>
         </Card.Content>
       </Card>
 
@@ -170,9 +202,9 @@ export default function Refer() {
               <Button
                 mode="text"
                 onPress={copyToClipboard}
-                style={styles.copyButton}>
-              <CopySvg height={30} width={30} />
-          
+                style={styles.copyButton}
+              >
+                <CopySvg height={30} width={30} />
               </Button>
             </View>
           </View>
@@ -211,10 +243,10 @@ export default function Refer() {
             mode="contained"
             onPress={onShare}
             style={styles.shareButton}
-            icon={()=>{
-              return     <ShareSvg height={30} width={30} />
-            }
-            }>
+            icon={() => {
+              return <ShareSvg height={30} width={30} />;
+            }}
+          >
             Share Your Code
           </Button>
         </Card.Content>
@@ -248,7 +280,8 @@ export default function Refer() {
         visible={visibleSnackbar}
         onDismiss={() => setVisibleSnackbar(false)}
         duration={3000}
-        style={{backgroundColor: theme.colors.primary}}>
+        style={{ backgroundColor: theme.colors.primary }}
+      >
         {snackbarMessage}
       </Snackbar>
     </ScrollView>

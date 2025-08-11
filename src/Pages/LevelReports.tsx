@@ -187,6 +187,7 @@ const DownlineNetwork = () => {
   const [downlineTree, setDownlineTree] = useState([]);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const [commissions, setCommissions] = useState([]);
+  const [totalCommission,setTotalCommission]=useState(0)
   
 const getReports = async () => {
   try {
@@ -195,7 +196,9 @@ const getReports = async () => {
       loader: true
     });
 
+    console.log(res?.data.data)
     const { downlines, commissions } = res.data.data;
+    setTotalCommission(res?.data.data.totalCommission)
 
     const downlineWithCommission = downlines.map(user => {
       // Filter all commissions where this user is the source (fromUser)
@@ -245,11 +248,10 @@ const getReports = async () => {
     return parseFloat(total.toFixed(12));
   };
 
-  console.log(downlineTree);
   return (
     <>
       <ScrollView contentContainerStyle={styles.tabContainer}>
-        <Text style={styles.header}>Your Referral Network</Text>
+        <Text style={styles.header}>Your Referral Network ({downlineTree.length})</Text>
 
         {downlineTree.length === 0 ? (
           <View style={styles.emptyContainer}>
@@ -272,7 +274,10 @@ const getReports = async () => {
                 <Text style={styles.userLevel}>Level 0</Text>
                 <Text style={styles.comissions}>
                   Total Commissions:{' '}
-                  {calculateUserCommissions(userDetails._id, commissions)} BTC
+                 <Text style={{
+                  fontWeight:"600",
+                  fontSize:16,
+                 }}>{totalCommission} BTC</Text>
                 </Text>
               </View>
               <View style={styles.badge}>
@@ -604,5 +609,6 @@ const styles = StyleSheet.create({
   },
   comissions: {
     color: 'green',
+    
   },
 });
