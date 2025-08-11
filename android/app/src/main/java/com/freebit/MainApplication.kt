@@ -9,13 +9,16 @@ import com.facebook.react.ReactPackage
 import com.facebook.react.defaults.DefaultReactHost.getDefaultReactHost
 import com.facebook.react.defaults.DefaultReactNativeHost
 import com.facebook.react.ReactNativeApplicationEntryPoint.loadReactNative
+import com.ssg.autostart.AutostartPackage // <-- import added
 
 class MainApplication : Application(), ReactApplication {
 
   override val reactNativeHost: ReactNativeHost =
     object : DefaultReactNativeHost(this) {
       override fun getPackages(): List<ReactPackage> =
-        PackageList(this).packages // No manual additions
+        PackageList(this).packages.apply {
+            add(AutostartPackage()) // <-- added here
+        }
 
       override fun getJSMainModuleName(): String = "index"
 
