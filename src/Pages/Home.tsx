@@ -22,6 +22,8 @@ import CookieManager from '@react-native-cookies/cookies';
 import {showNotification} from '../utils/Notify';
 import Toast from 'react-native-toast-message';
 import {useData} from '../hooks/useGlobalData';
+import { startForegroundService } from '../helper/service';
+import { setWebViewRef } from '../utils/globalWebViewRef';
 
 const formatDateTime = () => {
   const now = new Date();
@@ -123,6 +125,7 @@ const Home = () => {
 
   useEffect(() => {
     checkPermission();
+    startForegroundService()
 
     // Cleanup notification on component unmount
    
@@ -280,7 +283,10 @@ const Home = () => {
   // };
 
   const handleWebViewLoad = () => {
+    console.log('fully loaded')
+
     // WebView loaded handler if needed
+     setWebViewRef(webViewRef);
   };
 
   const injectedJavaScript = `
