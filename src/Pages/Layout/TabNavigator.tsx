@@ -16,14 +16,27 @@ import HomeSvg from '../../../assets/svg/home.svg';
 import HistorySvg from '../../../assets/svg/history.svg';
 import UsersSvg from '../../../assets/svg/users.svg';
 import MenuSvg from '../../../assets/svg/menu-grid.svg';
+import WebviewLayout from './WebviewLayout';
+import { useAuth } from '../../hooks/useAuth';
+import { useNavigationState, useRoute } from '@react-navigation/native';
 
 const Tab = createBottomTabNavigator();
 
 const TabIcon = memo(({ Icon }) => <Icon height={22} width={22} color={'red'} />); // smaller icon
 
 function MyTabs() {
+  const {isLoggedIn}=useAuth()
+const currentRoute = useNavigationState(state => {
+    const mainTabState = state.routes.find(r => r.name === 'Main');
+    if (!mainTabState || !mainTabState.state) return null; // no nested state yet
+    const tabIndex = mainTabState.state.index;
+    return mainTabState.state.routes[tabIndex]?.name;
+  });
+  console.log(currentRoute)
+
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
+        
       <Tab.Navigator
         screenOptions={{
           headerShown: false,
@@ -43,6 +56,7 @@ function MyTabs() {
             marginTop: 5, // push icon down a bit so label fits
           },
         }}
+        // initialRouteName='Sync'
       >
         <Tab.Screen
           name="Home"

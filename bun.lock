@@ -24,7 +24,6 @@
         "react-native": "^0.80.2",
         "react-native-autostart": "^1.0.7",
         "react-native-background-actions": "^4.0.1",
-        "react-native-floating-bubble": "^1.0.12",
         "react-native-gesture-handler": "^2.27.2",
         "react-native-image-picker": "^8.2.1",
         "react-native-mmkv": "^3.3.0",
@@ -1553,8 +1552,6 @@
     "react-native-background-actions": ["react-native-background-actions@4.0.1", "", { "dependencies": { "eventemitter3": "^4.0.7" }, "peerDependencies": { "react-native": ">=0.47.0" } }, "sha512-LADhnb4ag1oH5Lotq0j8K9e2cFmrafFyg2PCME88VkTjqDUgNcJonkNdMCTHN0N3fh+hwAA7nDR4Cxkj9Q8eCw=="],
 
     "react-native-drawer-layout": ["react-native-drawer-layout@4.1.12", "", { "dependencies": { "use-latest-callback": "^0.2.4" }, "peerDependencies": { "react": ">= 18.2.0", "react-native": "*", "react-native-gesture-handler": ">= 2.0.0", "react-native-reanimated": ">= 2.0.0" } }, "sha512-oKolvp5seiUieG+RHGjpFe8rH8Ds24iW0QBl31TlCVOX7tdn42IQIBl5tuD1i7h3q+VqqnbcT+NB2dcJ5suZkw=="],
-
-    "react-native-floating-bubble": ["react-native-floating-bubble@1.0.12", "", { "peerDependencies": { "react-native": "^0.41.2" } }, "sha512-TnWV85dYCUFlzHNy+l7YucRQcIu9C4XMMUOkPkFUjomuFWilAo3rk0Mpc4p6MdhT5Ycjx0rBPjv5YYO/IAgRXQ=="],
 
     "react-native-gesture-handler": ["react-native-gesture-handler@2.27.2", "", { "dependencies": { "@egjs/hammerjs": "^2.0.17", "hoist-non-react-statics": "^3.3.0", "invariant": "^2.2.4" }, "peerDependencies": { "react": "*", "react-native": "*" } }, "sha512-+kNaY2m7uQu5+5ls8os6z92DTk9expsEAYsaPv30n08mrqX2r64G8iVGDwNWzZcId54+P7RlDnhyszTql0sQ0w=="],
 

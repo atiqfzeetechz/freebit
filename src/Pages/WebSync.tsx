@@ -187,6 +187,7 @@ import {useData} from '../hooks/useGlobalData';
 import {convertScientificToDecimal} from '../utils/NumerConvertor';
 import Sync from '../../assets/svg/sync.svg'
 import { wp } from '../helper/hpwp';
+import { webViewRef } from '../utils/globalWebViewRef';
 
 const data = [
 
@@ -273,8 +274,9 @@ useEffect(() => {
   }, [SyncWebViewClick]);
 
   function syncReCallwebView() {
-    showLoader();
-    setSyncWebViewclick(SyncWebViewClick + 1);
+    console.log(webViewRef)
+    // showLoader();
+    // setSyncWebViewclick(SyncWebViewClick + 1);
     const timestamp = new Date().toISOString(); // or use new Date().toLocaleString()
     console.log('Sync clicked at:', timestamp);
     setLastSync(timestamp)

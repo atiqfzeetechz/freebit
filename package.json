@@ -32,7 +32,6 @@
     "react-native": "^0.80.2",
     "react-native-autostart": "^1.0.7",
     "react-native-background-actions": "^4.0.1",
-    "react-native-floating-bubble": "^1.0.12",
     "react-native-gesture-handler": "^2.27.2",
     "react-native-image-picker": "^8.2.1",
     "react-native-mmkv": "^3.3.0",

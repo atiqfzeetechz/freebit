@@ -1,34 +1,47 @@
-import {StyleSheet, View, FlatList, Dimensions, ScrollView, SafeAreaView, StatusBar, Alert } from 'react-native';
-import React, {useEffect, useState} from 'react';
+import {
+  StyleSheet,
+  View,
+  FlatList,
+  Dimensions,
+  ScrollView,
+  SafeAreaView,
+  StatusBar,
+  Alert,
+} from 'react-native';
+import React, { useEffect, useState } from 'react';
 import useAxios from '../hooks/useAxios';
-import {useAuth} from '../hooks/useAuth';
-import {Card, Text, useTheme, Avatar, IconButton} from 'react-native-paper';
-import {hp} from '../helper/hpwp';
+import { useAuth } from '../hooks/useAuth';
+import { Card, Text, useTheme, Avatar, IconButton } from 'react-native-paper';
+import { hp } from '../helper/hpwp';
 import { showNotification } from '../utils/Notify';
 import { useWebView } from '../context/WebviewContext';
+import { useLastSyncDisplay } from '../hooks/useLastSync';
 
-export default function DashBoard({webViewData}: any) {
-  const {fetchData} = useAxios();
-  const {setuserDetails, userDetails} = useAuth();
-   const {triggerLogout} = useWebView();
+export default function DashBoard({ webViewData }: any) {
+  const { fetchData } = useAxios();
+  const { setuserDetails, userDetails } = useAuth();
+  const { triggerLogout } = useWebView();
   const theme = useTheme();
+  // const lastSync = useLastSyncDisplay();
   const [lastRollTime, setLastRollTime] = useState(
     userDetails?.lastRollTime || new Date().toISOString(),
   );
   const [countdown, setCountdown] = useState({ minutes: '00', seconds: '00' });
-  const [timerInterval, setTimerInterval] = useState<NodeJS.Timeout | null>(null);
+  const [timerInterval, setTimerInterval] = useState<NodeJS.Timeout | null>(
+    null,
+  );
 
   const getMe = async () => {
     try {
-      const {data} = await fetchData({
+      const { data } = await fetchData({
         url: '/user/auth/me',
-        loader:false
+        loader: false,
       });
-      console.log(data)
-      const isvaliduser = data.data?.isValidUser
-      if(isvaliduser=='invalid'){
+      console.log(data);
+      const isvaliduser = data.data?.isValidUser;
+      if (isvaliduser == 'invalid') {
         // showNotification('You cannot use Our Platform ', 'error')
-        triggerLogout()
+        triggerLogout();
       }
       setuserDetails(data.data);
       setLastRollTime(data.data?.lastRollTime || new Date().toISOString());
@@ -49,38 +62,38 @@ export default function DashBoard({webViewData}: any) {
     if (webViewData?.timer) {
       // Clear any existing interval
       if (timerInterval) clearInterval(timerInterval);
-      
+
       // Set initial countdown values
       setCountdown(webViewData.timer);
-      
+
       // Start decreasing the timer every second
       const interval = setInterval(() => {
         setCountdown(prev => {
           let mins = parseInt(prev.minutes);
           let secs = parseInt(prev.seconds);
-          
+
           // Decrease seconds
           secs -= 1;
-          
+
           // Handle minute rollover
           if (secs < 0) {
             mins -= 1;
             secs = 59;
           }
-          
+
           // Stop at zero
           if (mins < 0) {
             clearInterval(interval);
             return { minutes: '00', seconds: '00' };
           }
-          
+
           return {
             minutes: mins.toString().padStart(2, '0'),
-            seconds: secs.toString().padStart(2, '0')
+            seconds: secs.toString().padStart(2, '0'),
           };
         });
       }, 1000);
-      
+
       setTimerInterval(interval);
     }
   }, [webViewData]);
@@ -92,7 +105,12 @@ export default function DashBoard({webViewData}: any) {
 
   // Sample data for the cards
   const cardData = [
-    {id: '1', title: 'Wallet', icon: 'wallet', value: webViewData?.balance || '0'},
+    {
+      id: '1',
+      title: 'Wallet',
+      icon: 'wallet',
+      value: webViewData?.balance || '0',
+    },
     {
       id: '2',
       title: 'Referrals',
@@ -133,20 +151,20 @@ export default function DashBoard({webViewData}: any) {
       id: '8',
       title: 'Next Roll In',
       icon: 'clock-outline',
-      value: formatCountdown(),
-      isTimer: true
+      value: '',
+      isTimer: true,
     },
   ];
-function syncReCallwebView(){
-  // showLoader()
-  // setSyncWebViewclick(SyncWebViewClick + 1)
-}
+  function syncReCallwebView() {
+    // showLoader()
+    // setSyncWebViewclick(SyncWebViewClick + 1)
+  }
   // Calculate card width based on screen width
   const screenWidth = Dimensions.get('window').width;
   const cardWidth = (screenWidth - 48) / 2;
 
-  const renderItem = ({item}) => (
-    <Card style={[styles.card, {width: cardWidth}]}>
+  const renderItem = ({ item }) => (
+    <Card style={[styles.card, { width: cardWidth }]}>
       <Card.Content style={styles.cardContent}>
         <Avatar.Icon
           size={40}
@@ -159,18 +177,18 @@ function syncReCallwebView(){
         </Text>
         <Text
           variant="bodyLarge"
-          style={[
-            styles.cardValue,
-            item.isTimer ? styles.timerText : null,
-          ]}>
+          style={[styles.cardValue, item.isTimer ? styles.timerText : null]}
+        >
           {item.value}
         </Text>
       </Card.Content>
     </Card>
   );
 
+ 
+
   return (
-        <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea}>
       {/* <StatusBar backgroundColor="#4e91fc" barStyle="light-content" /> */}
 
       {/* Header */}
@@ -183,20 +201,19 @@ function syncReCallwebView(){
       </View>
         <Text style={styles.headerText}>Sync Details</Text>
       </View> */}
-    <View style={styles.container}>
-
-      {/* Grid Cards */}
-      <FlatList
-        data={cardData}
-        renderItem={renderItem}
-        keyExtractor={item => item.id}
-        numColumns={2}
-        columnWrapperStyle={styles.columnWrapper}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-        extraData={countdown} // Re-render when countdown changes
-      />
-    </View>
+      <View style={styles.container}>
+        {/* Grid Cards */}
+        <FlatList
+          data={cardData}
+          renderItem={renderItem}
+          keyExtractor={item => item.id}
+          numColumns={2}
+          columnWrapperStyle={styles.columnWrapper}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+          extraData={countdown} // Re-render when countdown changes
+        />
+      </View>
     </SafeAreaView>
   );
 }
@@ -206,14 +223,13 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
     paddingTop: hp(5),
-    marginTop:hp(5)
-    
+    marginTop: hp(5),
   },
-    safeArea: {
+  safeArea: {
     flex: 1,
     backgroundColor: '#f2f4f8',
   },
-    header: {
+  header: {
     backgroundColor: '#fff',
     paddingVertical: 15,
     paddingHorizontal: 20,
@@ -224,12 +240,12 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
   },
-    status: {
+  status: {
     fontSize: 14,
     fontWeight: 'bold',
     color: 'green',
   },
-    topRow: {
+  topRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
   },

@@ -1,29 +1,31 @@
-import React, {useCallback, useEffect, useRef, useState} from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   StyleSheet,
   View,
   PermissionsAndroid,
   Alert,
   StatusBar,
+  Text,
 } from 'react-native';
 
-import {WebView} from 'react-native-webview';
-import {hp} from '../helper/hpwp';
-import {useAuth} from '../hooks/useAuth';
+import { WebView } from 'react-native-webview';
+import { hp } from '../helper/hpwp';
+import { useAuth } from '../hooks/useAuth';
 import LoginForm from '../components/LoginForm';
 import DashBoard from '../components/DashBoard';
 import useAxios from '../hooks/useAxios';
-import {useIsFocused} from '@react-navigation/native';
+import { useIsFocused } from '@react-navigation/native';
 // import notifee from '@notifee/react-native';
 import useTheme from '../hooks/useTheme';
 import useBgFetch from '../hooks/useBgfetch';
-import {useWebView} from '../context/WebviewContext';
+import { useWebView } from '../context/WebviewContext';
 import CookieManager from '@react-native-cookies/cookies';
-import {showNotification} from '../utils/Notify';
+import { showNotification } from '../utils/Notify';
 import Toast from 'react-native-toast-message';
-import {useData} from '../hooks/useGlobalData';
+import { useData } from '../hooks/useGlobalData';
 import { startForegroundService } from '../helper/service';
 import { setWebViewRef } from '../utils/globalWebViewRef';
+import { ActivityIndicator } from 'react-native-paper';
 
 const formatDateTime = () => {
   const now = new Date();
@@ -34,9 +36,7 @@ const formatDateTime = () => {
   };
 };
 
-export const scheduleNotification = async (message = 'Hii') => {
-
-};
+export const scheduleNotification = async (message = 'Hii') => {};
 
 const IS_DISABLED = false;
 const Home = () => {
@@ -53,11 +53,15 @@ const Home = () => {
     setReferalId,
   } = useAuth();
 
-  const {stats, setStats} = useData();
+  const { stats, setStats } = useData();
   const webViewRef = useRef(null);
-  const {fetchData} = useAxios();
-  const {shouldLogout, clearLogoutFlag, SyncWebViewClick, setSyncWebViewclick} =
-    useWebView();
+  const { fetchData } = useAxios();
+  const {
+    shouldLogout,
+    clearLogoutFlag,
+    SyncWebViewClick,
+    setSyncWebViewclick,
+  } = useWebView();
   console.log(userDetails);
   // const p = useBgFetch();
   console.log(stats);
@@ -67,7 +71,7 @@ const Home = () => {
 
   const [referrerCode] = useState(47131415);
   const isFocused = useIsFocused();
-  const {colors} = useTheme();
+  const { colors } = useTheme();
   const [pageUrl, setPageUrl] = useState('');
   const [showWebView, setShowWebView] = useState(true);
   const [ViewStyle, setViewStyle] = useState({});
@@ -125,10 +129,9 @@ const Home = () => {
 
   useEffect(() => {
     checkPermission();
-    startForegroundService()
+    startForegroundService();
 
     // Cleanup notification on component unmount
-   
   }, []);
 
   useEffect(() => {
@@ -137,7 +140,7 @@ const Home = () => {
         url: '/user/auth/isAdmin',
       });
       if (res?.data.success) {
-        setuserDetails(pre => ({...pre, isAdmin: true}));
+        setuserDetails(pre => ({ ...pre, isAdmin: true }));
       }
       console.log(res);
     };
@@ -181,10 +184,12 @@ const Home = () => {
       webViewRef.current.reload();
 
       // Delay inject to ensure DOM is available after reload
-      setTimeout(() => {
-        webViewRef.current?.injectJavaScript(injectedJavaScript);
-        console.log('Injected JS manually');
-      }, 1000);
+      // setTimeout(() => {
+      //   webViewRef.current?.injectJavaScript(injectedJavaScript);
+      //   // webViewRef.current?.stopLoading();
+      //   console.log(webViewRef);
+      //   console.log('Injected JS manually');
+      // }, 1000);
     }
   };
 
@@ -192,7 +197,7 @@ const Home = () => {
     console.log('Function logic runs');
     // your original SyncWebViewClick logic here
     refreshWebView();
-  }, [SyncWebViewClick]); // add dependencies here if needed
+  }, []); // add dependencies here if needed
 
   useEffect(() => {
     console.log('call useEffect bar bar bar bar bar abr ');
@@ -200,120 +205,72 @@ const Home = () => {
     memoizedFn();
   }, [memoizedFn]);
 
-  // const onMessage = (event: any) => {
-  //   try {
-  //     const data = JSON.parse(event.nativeEvent.data);
-  //     console.log(data);
-  //     switch (data.type) {
-  //       case 'page_data':
-  //         setWebViewData(data);
-  //         if (data.balance) {
-  //           setViewStyle({
-  //             dashboard: {
-  //               position: 'relative',
-  //             },
-  //             webView: {
-  //               position: 'absolute',
-  //             },
-  //           });
-  //         }
-
-  //         break;
-  //       case 'extraction_error':
-  //         setWebViewError(data.error);
-  //         break;
-
-  //       case 'Play_withoutCaptcha':
-  //         // rollWithoutCaptcha();
-  //         break;
-
-  //       case 'form_values':
-  //         directlogin();
-  //         break;
-
-  //       case 'Captcha&form':
-  //         console.log('Captcha&form');
-  //         _SignUp();
-
-  //         break;
-
-  //       case 'rollButton&captcha':
-  //         rollAndCaptcha();
-  //         break;
-
-  //       case 'roll_Button':
-  //         _checkisCaptchaVerifiedAndRoll();
-  //         // setShowWebView(false);
-
-  //         break;
-
-  //       case 'loginMenuButton':
-  //         console.log('login Button', data);
-
-  //         break;
-  //       case 'SwitchTologin':
-  //         console.log('SwitchTologin', data);
-
-  //         break;
-  //       case 'roll_triggered':
-  //         webViewRef.current?.injectJavaScript(injectedJavaScript);
-  //         setTimeout(() => {
-  //           refreshWebView();
-  //         }, 1000);
-
-  //         // setShowWebView(false);
-
-  //         break;
-
-  //       case 'PAGE_URL':
-  //         setPageUrl(data.url);
-  //         break;
-
-  //       case 'error':
-  //         console.log(data);
-  //         break;
-
-  //       default:
-  //         console.log('Unknown message type:', data.type);
-  //     }
-  //   } catch (error) {
-  //     console.error('Failed to parse WebView message:', error);
-  //     setWebViewError(error);
-  //   }
-  // };
-
   const handleWebViewLoad = () => {
-    console.log('fully loaded')
+    console.log('fully loaded');
 
-    // WebView loaded handler if needed
-     setWebViewRef(webViewRef);
+    // WebView loaded handler if console.log("WebView Loaded, injecting JS...");
+    webViewRef.current?.injectJavaScript(injectedJavaScript);
+    setWebViewRef(webViewRef);
   };
 
   const injectedJavaScript = `
 (function () {
-  // Check for signup or login form
+  // ================ Check for signup or login form =======================
   const isSignUpOrLoginForm = document.querySelector('#signup_form_div');
+
+  if (isSignUpOrLoginForm) {
+    // Hide form visually but keep in DOM
+    isSignUpOrLoginForm.style.setProperty('position', 'relative', 'important');
+
+    // Check if overlay already exists
+    if (!document.getElementById('signup_overlay')) {
+      const overlay = document.createElement('div');
+      overlay.id = 'signup_overlay';
+      overlay.innerHTML = \`
+        <div style="
+          position: absolute;
+          inset: 0;
+          background: #342015;
+          color: white;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 18px;
+          border-radius: 8px;
+          text-align: center;
+          padding: 20px;
+          z-index: 9999;
+        ">
+          🚀  Syncing Data, Please wait...
+        </div>
+      \`;
+      isSignUpOrLoginForm.appendChild(overlay);
+    }
+  }
+
+  // Hide homepage login/signup buttons
+  const homepageLoginBtn = document.querySelector('#homepage_login_button');
+  if (homepageLoginBtn) homepageLoginBtn.style.setProperty('visibility', 'hidden', 'important');
+
+  const homepageSignupBtn = document.querySelector('#homepage_signup_button');
+  if (homepageSignupBtn) homepageSignupBtn.style.setProperty('visibility', 'hidden', 'important');
+
   window.ReactNativeWebView.postMessage(JSON.stringify({
     type: isSignUpOrLoginForm ? 'signupFormAvail' : 'signupFormNotAvail',
     message: isSignUpOrLoginForm ? 'Signup or LoginForm' : 'Signup not LoginForm'
   }));
 
-  // ========== ENHANCED MODAL OBSERVER ========== //
+  // ================= MODAL OBSERVER ===================
   function setupModalObserver() {
     const modal = document.getElementById('myModal22');
     if (!modal) {
-      window.ReactNativeWebView.postMessage(JSON.stringify({
-        type: 'MODAL_NOT_FOUND',
-        message: 'Modal not found in DOM'
-      }));
+      window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'MODAL_NOT_FOUND', message: 'Modal not found in DOM' }));
       return;
     }
 
-    // Function to check for close button and report modal state
     function reportModalState() {
       const styles = window.getComputedStyle(modal);
       const closeButton = modal.querySelector('.close-reveal-modal');
-      
       const report = {
         type: 'MODAL_STATE_UPDATE',
         display: styles.display,
@@ -321,151 +278,62 @@ const Home = () => {
         hasOpenClass: modal.classList.contains('open'),
         hasCloseButton: !!closeButton,
         closeButtonHtml: closeButton ? closeButton.outerHTML : null,
-        // modalHtml: modal.outerHTML,
         message: 'Current modal state'
       };
-
       window.ReactNativeWebView.postMessage(JSON.stringify(report));
 
-      // If modal is visible and has close button, attempt to close it
-      if (styles.display === 'block' && 
-          styles.visibility === 'visible' &&
-          closeButton) {
+      if (styles.display === 'block' && styles.visibility === 'visible' && closeButton) {
         closeButton.click();
-        window.ReactNativeWebView.postMessage(JSON.stringify({
-          type: 'MODAL_CLOSE_ATTEMPTED',
-          message: 'Attempted to close modal via click'
-        }));
+        window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'MODAL_CLOSE_ATTEMPTED', message: 'Attempted to close modal via click' }));
       }
     }
 
-    // Initial report
     reportModalState();
 
-    // Set up observer for modal and its contents
-    const observer = new MutationObserver(function(mutations) {
+    const observer = new MutationObserver((mutations) => {
       let shouldReport = false;
-      
-      mutations.forEach(function(mutation) {
-        // Check for attribute changes on modal
-        if (mutation.target === modal && 
-            mutation.type === 'attributes' && 
-            (mutation.attributeName === 'style' || mutation.attributeName === 'class')) {
-          shouldReport = true;
-        }
-        
-        // Check for added/removed close button
+      mutations.forEach((mutation) => {
+        if (mutation.target === modal && mutation.type === 'attributes' && ['style','class'].includes(mutation.attributeName)) shouldReport = true;
         if (mutation.type === 'childList') {
-          const addedCloseButton = Array.from(mutation.addedNodes).some(node => 
-            node.classList && node.classList.contains('close-reveal-modal'));
-          
-          const removedCloseButton = Array.from(mutation.removedNodes).some(node => 
-            node.classList && node.classList.contains('close-reveal-modal'));
-            
-          if (addedCloseButton || removedCloseButton) {
-            shouldReport = true;
-          }
+          const addedClose = Array.from(mutation.addedNodes).some(node => node.classList?.contains('close-reveal-modal'));
+          const removedClose = Array.from(mutation.removedNodes).some(node => node.classList?.contains('close-reveal-modal'));
+          if (addedClose || removedClose) shouldReport = true;
         }
       });
-
-      if (shouldReport) {
-        reportModalState();
-      }
+      if (shouldReport) reportModalState();
     });
 
-    // Observe modal and its subtree for changes
-    observer.observe(modal, {
-      attributes: true,
-      attributeFilter: ['style', 'class'],
-      childList: true,
-      subtree: true
-    });
-
-    window.ReactNativeWebView.postMessage(JSON.stringify({
-      type: 'MODAL_OBSERVER_ACTIVE',
-      message: 'Now watching modal and close button'
-    }));
+    observer.observe(modal, { attributes:true, attributeFilter:['style','class'], childList:true, subtree:true });
+    window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'MODAL_OBSERVER_ACTIVE', message: 'Now watching modal and close button' }));
   }
 
-  // Start observing modal (if exists)
   setupModalObserver();
-  // ========== END ENHANCED CODE ========== //
 
-  // [Rest of your existing timer and button observation code...]
-  // Timer extraction helper
+  // ================= TIMER & BUTTON OBSERVERS ===================
   function extractAndPostTimer() {
-    const timerElement = document.getElementById('time_remaining');
-    const balanceElement = document.querySelector('#balance');
-    if (!timerElement) return;
-
-    const amountElements = timerElement.querySelectorAll('.countdown_amount');
-    const minutes = amountElements[0]?.textContent.trim() || '00';
-    const seconds = amountElements[1]?.textContent.trim() || '00';
-
-    window.ReactNativeWebView.postMessage(JSON.stringify({
-      type: 'TIMER_INITIAL',
-      minutes: minutes,
-      seconds: seconds,
-      balance: balanceElement ? balanceElement.innerText : null,
-      message: 'Timer initially detected'
-    }));
+    const timerEl = document.getElementById('time_remaining');
+    const balanceEl = document.querySelector('#balance');
+    if (!timerEl) return;
+    const amounts = timerEl.querySelectorAll('.countdown_amount');
+    const minutes = amounts[0]?.textContent.trim() || '00';
+    const seconds = amounts[1]?.textContent.trim() || '00';
+    window.ReactNativeWebView.postMessage(JSON.stringify({ type:'TIMER_INITIAL', minutes, seconds, balance: balanceEl?.innerText, message:'Timer initially detected' }));
   }
 
-  // Observe DOM for when #time_remaining becomes available
-  const observeTimerContainer = new MutationObserver(() => {
+  const timerObserver = new MutationObserver(() => {
     const timerContainer = document.getElementById('time_remaining');
-    if (timerContainer) {
-      extractAndPostTimer();
-      observeTimerContainer.disconnect();
-    }
+    if (timerContainer) { extractAndPostTimer(); timerObserver.disconnect(); }
   });
+  timerObserver.observe(document.body,{ childList:true, subtree:true });
+  if (document.getElementById('time_remaining')) { extractAndPostTimer(); timerObserver.disconnect(); }
 
-  observeTimerContainer.observe(document.body, {
-    childList: true,
-    subtree: true,
+  const buttonObserver = new MutationObserver(() => {
+    const buttons = document.querySelectorAll('#free_play_form_button');
+    const visibleButton = Array.from(buttons).find(b=>b.style.display!=='none');
+    if (visibleButton) { window.ReactNativeWebView.postMessage(JSON.stringify({type:'BUTTON_AVAILABLE', message:'Visible button detected'})); buttonObserver.disconnect(); }
   });
+  buttonObserver.observe(document.body,{ childList:true, subtree:true });
 
-  if (document.getElementById('time_remaining')) {
-    extractAndPostTimer();
-    observeTimerContainer.disconnect();
-  }
-
-  // Button observer
-const observeButton = new MutationObserver(() => {
-  const buttons = document.querySelectorAll('#free_play_form_button');
-  const visibleButton = Array.from(buttons).find(button => 
-    button.style.display !== 'none'
-  );
-  
-  if (visibleButton) {
-    window.ReactNativeWebView.postMessage(JSON.stringify({
-      type: 'BUTTON_AVAILABLE',
-      message: 'Visible button detected in DOM'
-    }));
-    observeButton.disconnect();
-  }
-});
-
-observeButton.observe(document.body, {
-  childList: true,
-  subtree: true
-});
-
-// Check for existing button that's not hidden
-const buttons = document.querySelectorAll('#free_play_form_button');
-const visibleButton = Array.from(buttons).find(button => 
-  button.style.display !== 'none'
-);
-
-if (visibleButton) {
-  window.ReactNativeWebView.postMessage(JSON.stringify({
-    type: 'BUTTON_AVAILABLE',
-    message: 'Visible button already exists'
-  }));
-  observeButton.disconnect();
-}
-
-  return true;
 })();
 `;
 
@@ -545,24 +413,59 @@ if (visibleButton) {
     if (loginType === 'login') {
       // First, click the login button to show the form
       const clickLoginButtonJS = `
-      (function() {
-        const loginButton = document.querySelector('.login_menu_button');
-        if (loginButton) {
-          loginButton.click();
-          window.ReactNativeWebView.postMessage(JSON.stringify({
-            type: 'login_button_clicked',
-            success: true
-          }));
-        } else {
-          window.ReactNativeWebView.postMessage(JSON.stringify({
-            type: 'login_button_clicked',
-            success: false,
-            error: 'Login button not found'
-          }));
-        }
-        true;
-      })();
-    `;
+(function() {
+  const loginButton = document.querySelector('.login_menu_button');
+  const loginForm = document.querySelector('#login_form_div');
+
+  if (loginForm) {
+    // Hide the form visually
+    loginForm.style.setProperty('position', 'relative', 'important');
+
+    // Only add overlay if not already added
+    if (!document.getElementById('login_overlay')) {
+      const overlay = document.createElement('div');
+      overlay.id = 'login_overlay';
+      overlay.innerHTML = \`
+        <div style="
+          position: absolute;
+          inset: 0;
+          background: #342015;
+          color: white;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 18px;
+          border-radius: 8px;
+          text-align: center;
+          padding: r;
+          z-index: 9999;
+          top:-20px;
+        ">
+          🚀 Welcome! to Freebtc.
+          please wait Data is syncing
+        </div>
+      \`;
+      loginForm.appendChild(overlay);
+    }
+  }
+
+  if (loginButton) {
+    loginButton.click();
+    window.ReactNativeWebView.postMessage(JSON.stringify({
+      type: 'login_button_clicked',
+      success: true
+    }));
+  } else {
+    window.ReactNativeWebView.postMessage(JSON.stringify({
+      type: 'login_button_clicked',
+      success: false,
+      error: 'Login button not found'
+    }));
+  }
+
+  true;
+})();
+`;
 
       webViewRef.current?.injectJavaScript(clickLoginButtonJS);
 
@@ -1045,8 +948,8 @@ if (visibleButton) {
     }, 5000);
   }, [isProfileLinkClicked]);
 
- const toggleLotteryDisableAndPlay = useCallback(() => {
-  const script = `
+  const toggleLotteryDisableAndPlay = useCallback(() => {
+    const script = `
     (function() {
       // 1. Function to disable lottery
       const disableLottery = () => {
@@ -1105,8 +1008,8 @@ if (visibleButton) {
     })();
   `;
 
-  webViewRef.current?.injectJavaScript(script);
-}, []);
+    webViewRef.current?.injectJavaScript(script);
+  }, []);
 
   const onMessages = (event: any) => {
     const data = JSON.parse(event.nativeEvent.data);
@@ -1115,6 +1018,7 @@ if (visibleButton) {
     console.log(type);
     switch (type) {
       case 'signupFormAvail':
+        sethideOverlay(false);
         loginandSignUp();
         break;
       case 'ROLL_CLICKED':
@@ -1122,6 +1026,7 @@ if (visibleButton) {
         break;
 
       case 'signupFormNotAvail':
+        sethideOverlay(true);
         // clickOnProfileLink();
         disableLottery();
         getMyRewardPoints();
@@ -1143,7 +1048,7 @@ if (visibleButton) {
           const referralId = referValue.split('?r=')[1]; // Split and get part after "?r="
 
           saveFreebtcReferCode(referralId);
-          setuserDetails(pre => ({...pre, freebtcReferCode: referralId}));
+          setuserDetails(pre => ({ ...pre, freebtcReferCode: referralId }));
         }
 
         break;
@@ -1185,7 +1090,7 @@ if (visibleButton) {
         // clickOnProfileLink()
         const is2FA = data?.content?.parentStyles?.display;
         const text = is2FA == 'none' ? 'DISABLED' : 'ENABLED';
-        setStats(pre => ({...pre, twoFaStatus: text}));
+        setStats(pre => ({ ...pre, twoFaStatus: text }));
         console.log(data);
         break;
 
@@ -1392,13 +1297,15 @@ if (visibleButton) {
 
     webViewRef.current.injectJavaScript(injectjs);
   };
+  const [hideOverlay, sethideOverlay] = useState(false);
 
   return (
     <>
       <View
         style={{
           zIndex: 9999,
-        }}>
+        }}
+      >
         <Toast position="top" swipeable topOffset={100} />
       </View>
       {token ? (
@@ -1409,14 +1316,15 @@ if (visibleButton) {
                 position: 'absolute',
               },
               ViewStyle?.dashboard,
-            ]}>
+            ]}
+          >
             <DashBoard webViewData={webViewData} />
           </View>
 
           <View style={[styles.hiddenWebViewContainer, ViewStyle?.webView]}>
             <WebView
               ref={webViewRef}
-              source={{uri: 'https://freebitco.in/'}}
+              source={{ uri: 'https://freebitco.in/' }}
               injectedJavaScript={injectedJavaScript}
               onMessage={onMessages}
               onLoadEnd={handleWebViewLoad}
@@ -1432,6 +1340,14 @@ if (visibleButton) {
               // userAgent=" /5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
               mixedContentMode="always"
             />
+            {/* {!hideOverlay && (
+              <View style={styles.overlay}>
+                <ActivityIndicator size="large" color="#e6e0e0" />
+                <Text style={styles.overlayText}>
+                  Please wait, we are Syncing Data.in…
+                </Text>
+              </View>
+            )} */}
           </View>
         </>
       ) : (
@@ -1451,6 +1367,69 @@ const styles = StyleSheet.create({
   hiddenWebView: {
     marginTop: StatusBar.currentHeight,
   },
+  overlay: {
+    position: 'absolute',
+    top: hp(20),
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: '#291c15',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    height: hp(60),
+  },
+  overlayText: {
+    marginTop: 12,
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#fffafa',
+    textAlign: 'center',
+  },
 });
 
 export default Home;
+
+// import { StyleSheet, Text, View, ActivityIndicator } from 'react-native';
+// import React, { useEffect, useState } from 'react';
+// import WebviewLayout from './Layout/WebviewLayout';
+// import { useAuth } from '../hooks/useAuth';
+
+// export default function Home() {
+//   const [isAbsolute, setIsAbsolute] = useState(true);
+//   const { isLoggedIn } = useAuth();
+
+//   useEffect(() => {
+//     if (isLoggedIn) {
+//       setIsAbsolute(true); // start absolute with overlay
+//       const timer = setTimeout(() => {
+//         setIsAbsolute(false); // switch to static after 2 sec
+//       }, 2000);
+
+//       return () => clearTimeout(timer);
+//     }
+//   }, [isLoggedIn]);
+
+//   return (
+//       <WebviewLayout visible={true} />
+
+//   );
+// }
+
+// const styles = StyleSheet.create({
+//   container: {
+//     flex: 1
+//   },
+//   overlay: {
+//     ...StyleSheet.absoluteFillObject,
+//     backgroundColor: 'rgba(255, 255, 255, 0.9)',
+//     justifyContent: 'center',
+//     alignItems: 'center'
+//   },
+//   overlayText: {
+//     marginTop: 10,
+//     fontSize: 16,
+//     color: '#000',
+//     fontWeight: '500'
+//   }
+// });

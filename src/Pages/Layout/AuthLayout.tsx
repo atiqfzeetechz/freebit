@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import MyTabs from './TabNavigator';
 import {
@@ -19,8 +19,9 @@ import ChangeWithDrawlAddress from '../ChangeWithDrawlAddress';
 import WReports from '../WReports';
 import LevelReports from '../LevelReports';
 import InvalidUserRegForm from '../../components/InavlidUserRegFrom';
-import { useRoute } from '@react-navigation/native';
+import { useNavigationState, useRoute } from '@react-navigation/native';
 import messaging from '@react-native-firebase/messaging';
+import WebviewLayout from './WebviewLayout';
 
 const Stack = createStackNavigator();
 
@@ -103,15 +104,26 @@ const AuthLayout = () => {
   const getFcmToken = async () => {
     try {
       const token = await messaging().getToken();
-      setFcmToken(token)
+      setFcmToken(token);
       console.log(token);
     } catch (error) {
       console.log(error);
     }
   };
+  const [webViewVisible, setWebViewVisible] = useState(false);
+  useEffect(() => {
+    if (isLoggedIn) {
+      setWebViewVisible(true); // initially absolute hidden
+      const timer = setTimeout(() => {
+        setWebViewVisible(false); // switch to normal view
+      }, 500);
 
+      return () => clearTimeout(timer);
+    }
+  }, [isLoggedIn]);
   return (
     <>
+      {isLoggedIn && <WebviewLayout visible={false} />}
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {isLoggedIn ? (
           <>

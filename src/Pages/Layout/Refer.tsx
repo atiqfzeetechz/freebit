@@ -21,6 +21,7 @@ import {
   Snackbar,
   List,
   Avatar,
+  Appbar,
 } from 'react-native-paper';
 import Clipboard from '@react-native-clipboard/clipboard';
 // import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -34,11 +35,13 @@ export default function Refer() {
   const isFocused = useIsFocused();
   const theme = useTheme();
   const [referralHistory, setReferralHistory] = useState([]);
+  const [myTeams, setMyTeams] = useState([]);
+  const [commissions, setCommisions] = useState('');
   const [visibleSnackbar, setVisibleSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const { userDetails } = useAuth();
-  const navigation = useNavigation()
+  const navigation = useNavigation();
 
   const myReferral = async () => {
     try {
@@ -48,6 +51,7 @@ export default function Refer() {
       if (response.data?.success) {
         console.log(response.data.data);
         setReferralHistory(response.data.data);
+        console.log({ teams: response });
       }
     } catch (error) {
       setSnackbarMessage('Failed to fetch referral data');
@@ -55,6 +59,21 @@ export default function Refer() {
     }
   };
 
+  const onlyMyReferals = async () => {
+    const res = await fetchData({
+      url: '/user/auth/onlyMyReferals',
+      loader: true,
+    });
+    console.log(res);
+    const response = res.data;
+    console.log(response);
+    if (response?.success) {
+      setReferralHistory(response.data.referrals);
+      setCommisions(response.data.totalCommission);
+      setMyTeams(response?.data.myTeam);
+    }
+    console.log({ commsison: response.totalCommission });
+  };
   const copyToClipboard = () => {
     if (userDetails?.referralCode) {
       Clipboard.setString(userDetails.referralCode);
@@ -77,214 +96,232 @@ export default function Refer() {
 
   useEffect(() => {
     if (isFocused) {
-      myReferral();
+      // onlyMyReferals()
+      // myReferral();
     }
   }, [isFocused]);
 
+  useEffect(() => {
+    onlyMyReferals();
+  }, []);
+
   const handleRefresh = async () => {
-    setRefreshing(true);
-    await myReferral();
-    setRefreshing(false);
+    // setRefreshing(true);
+    await onlyMyReferals();
+    // setRefreshing(false);
   };
 
   const renderHistoryItem = ({ item }) => (
     <>
-      {item.level == 1 && (
-        <List.Item
-          title={item.email || 'New User'}
-          description={item?.referId}
-          left={props => (
-            <List.Icon
-              {...props}
-              icon={() => (
-                <>
-                  <UserSvg width={25} height={25} />
-                </>
-              )}
-            />
-          )}
-          // right={props => (
-          //   <Text {...props} style={styles.rewardText}>
-          //     +{item.reward || '0'} points
-          //   </Text>
-          // )}
-        />
-      )}
+      (
+      <List.Item
+        title={item.email || 'New User'}
+        description={item?.referId}
+        left={props => (
+          <List.Icon
+            {...props}
+            icon={() => (
+              <>
+                <UserSvg width={25} height={25} />
+              </>
+            )}
+          />
+        )}
+        // right={props => (
+        //   <Text {...props} style={styles.rewardText}>
+        //     +{item.reward || '0'} points
+        //   </Text>
+        // )}
+      />
+      )
     </>
   );
 
-  
   return (
-    <ScrollView
-      contentContainerStyle={[
-        styles.container,
-        { backgroundColor: theme.colors.background },
-      ]}
-      refreshControl={
-        <RefreshControl onRefresh={handleRefresh} refreshing={refreshing} />
-      }
-    >
-      {/* User Profile Card */}
-      <Card style={styles.card}>
-        <Card.Content>
-          <View style={styles.profileHeader}>
-            <Avatar.Text
-              size={64}
-              label={userDetails?.email?.charAt(0).toUpperCase() || 'U'}
-              style={styles.avatar}
-            />
-            <View style={styles.profileInfo}>
-              <Title style={styles.email}>{userDetails?.email}</Title>
-              <Text style={styles.memberSince}>
-                Member since:{' '}
-                {new Date(userDetails?.createdAt).toLocaleDateString()}
-              </Text>
+    <>
+      <Appbar.Header>
+        <Appbar.Content
+          title="Refer and Earn"
+          titleStyle={{
+            fontSize: 18,
+            fontWeight: '800',
+          }}
+        />
+      </Appbar.Header>
+      <ScrollView
+        contentContainerStyle={[
+          styles.container,
+          { backgroundColor: theme.colors.background },
+        ]}
+        refreshControl={
+          <RefreshControl onRefresh={handleRefresh} refreshing={refreshing} />
+        }
+      >
+        {/* User Profile Card */}
+        <Card style={styles.card}>
+          <Card.Content>
+            <View style={styles.profileHeader}>
+              <Avatar.Text
+                size={64}
+                label={userDetails?.email?.charAt(0).toUpperCase() || 'U'}
+                style={styles.avatar}
+              />
+              <View style={styles.profileInfo}>
+                <Title style={styles.email}>{userDetails?.email}</Title>
+                <Text style={styles.memberSince}>
+                  Member since:{' '}
+                  {new Date(userDetails?.createdAt).toLocaleDateString()}
+                </Text>
+              </View>
             </View>
-          </View>
 
-          <View style={styles.statsContainer}>
-            <View style={styles.statItem}>
+            <View style={styles.statsContainer}>
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>
+                  {userDetails?.referralCount || 0}
+                </Text>
+                <Text style={styles.statLabel}>Referrals</Text>
+              </View>
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>
+                  {commissions || '0.00000000'}
+                </Text>
+                <Text style={styles.statLabel}>Referal BTC Balance</Text>
+              </View>
+            </View>
+            <TouchableOpacity
+              style={[
+                styles.statItem,
+                {
+                  // backgroundColor:"gray",
+                  maxWidth: 150,
+                  alignSelf: 'center',
+                },
+              ]}
+              onPress={() => {
+                // Handle the press event here
+                console.log('Teams pressed');
+                // You might want to navigate to a teams screen:
+                // navigation.navigate('Teams');
+              }}
+            >
               <Text style={styles.statValue}>
-                {userDetails?.referralCount || 0}
-              </Text>
-              <Text style={styles.statLabel}>Referrals</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>
-                {referralHistory?.totalCommission || '0.00000000'}
-              </Text>
-              <Text style={styles.statLabel}>Referal BTC Balance</Text>
-            </View>
-          </View>
-          <TouchableOpacity
-            style={[
-              styles.statItem,
-              {
-                // backgroundColor:"gray",
-                maxWidth: 150,
-                alignSelf:"center"
-              },
-            ]}
-            onPress={() => {
-              // Handle the press event here
-              console.log('Teams pressed');
-              // You might want to navigate to a teams screen:
-              // navigation.navigate('Teams');
-            }}
-          >
-            
-            <Text style={styles.statValue}>
-             Your Team ({referralHistory?.downlines?.length || 0} )
-            </Text>
-            <Button mode="contained" onPress={() => navigation.navigate('levelreports')}>
-              Details ⏩
-            </Button>
-
-          </TouchableOpacity>
-        </Card.Content>
-      </Card>
-
-      {/* Referral Section */}
-      <Card style={styles.card}>
-        <Card.Content>
-          <Title style={styles.title}>Refer & Earn</Title>
-          <Paragraph style={styles.description}>
-            Invite friends and earn rewards when they join using your referral
-            code.
-          </Paragraph>
-
-          <View style={styles.referralContainer}>
-            <Text style={styles.label}>Your Referral Code:</Text>
-            <View style={styles.codeContainer}>
-              <Text style={styles.code}>
-                {userDetails?.referralCode || '------'}
+                Your Team ({myTeams?.length || 0} )
               </Text>
               <Button
-                mode="text"
-                onPress={copyToClipboard}
-                style={styles.copyButton}
+                mode="contained"
+                onPress={() => navigation.navigate('levelreports')}
               >
-                <CopySvg height={30} width={30} />
+                Details ⏩
               </Button>
-            </View>
-          </View>
+            </TouchableOpacity>
+          </Card.Content>
+        </Card>
 
-          <View style={styles.stepsContainer}>
-            <Title style={styles.howItWorks}>How It Works</Title>
-            <View style={styles.step}>
-              {/* <Icon
+        {/* Referral Section */}
+        <Card style={styles.card}>
+          <Card.Content>
+            <Title style={styles.title}>Refer & Earn</Title>
+            <Paragraph style={styles.description}>
+              Invite friends and earn rewards when they join using your referral
+              code.
+            </Paragraph>
+
+            <View style={styles.referralContainer}>
+              <Text style={styles.label}>Your Referral Code:</Text>
+              <View style={styles.codeContainer}>
+                <Text style={styles.code}>
+                  {userDetails?.referralCode || '------'}
+                </Text>
+                <Button
+                  mode="text"
+                  onPress={copyToClipboard}
+                  style={styles.copyButton}
+                >
+                  <CopySvg height={30} width={30} />
+                </Button>
+              </View>
+            </View>
+
+            <View style={styles.stepsContainer}>
+              <Title style={styles.howItWorks}>How It Works</Title>
+              <View style={styles.step}>
+                {/* <Icon
                 name="numeric-1-circle"
                 size={24}
                 color={theme.colors.primary}
               /> */}
-              <Text style={styles.stepText}>
-                Share your referral code with friends
-              </Text>
-            </View>
-            <View style={styles.step}>
-              {/* <Icon
+                <Text style={styles.stepText}>
+                  Share your referral code with friends
+                </Text>
+              </View>
+              <View style={styles.step}>
+                {/* <Icon
                 name="numeric-2-circle"
                 size={24}
                 color={theme.colors.primary}
               /> */}
-              <Text style={styles.stepText}>They sign up using your code</Text>
-            </View>
-            <View style={styles.step}>
-              {/* <Icon
+                <Text style={styles.stepText}>
+                  They sign up using your code
+                </Text>
+              </View>
+              <View style={styles.step}>
+                {/* <Icon
                 name="numeric-3-circle"
                 size={24}
                 color={theme.colors.primary}
               /> */}
-              <Text style={styles.stepText}>You both earn rewards!</Text>
+                <Text style={styles.stepText}>You both earn rewards!</Text>
+              </View>
             </View>
-          </View>
 
-          <Button
-            mode="contained"
-            onPress={onShare}
-            style={styles.shareButton}
-            icon={() => {
-              return <ShareSvg height={30} width={30} />;
-            }}
-          >
-            Share Your Code
-          </Button>
-        </Card.Content>
-      </Card>
+            <Button
+              mode="contained"
+              onPress={onShare}
+              style={styles.shareButton}
+              icon={() => {
+                return <ShareSvg height={30} width={30} />;
+              }}
+            >
+              Share Your Code
+            </Button>
+          </Card.Content>
+        </Card>
 
-      {/* Referral History Section */}
-      <Card style={[styles.card, styles.historyCard]}>
-        <Card.Content>
-          <Title style={styles.historyTitle}>Your Referral History</Title>
-          {referralHistory?.downlines?.length > 0 ? (
-            <FlatList
-              data={referralHistory?.downlines}
-              renderItem={renderHistoryItem}
-              keyExtractor={item => item.id}
-              scrollEnabled={false}
-            />
-          ) : (
-            <View style={styles.emptyHistory}>
-              {/* <Icon
+        {/* Referral History Section */}
+        <Card style={[styles.card, styles.historyCard]}>
+          <Card.Content>
+            <Title style={styles.historyTitle}>Your Referral History</Title>
+            {referralHistory?.length > 0 ? (
+              <FlatList
+                data={referralHistory}
+                renderItem={renderHistoryItem}
+                keyExtractor={item => item._id}
+                scrollEnabled={false}
+              />
+            ) : (
+              <View style={styles.emptyHistory}>
+                {/* <Icon
                 name="information-outline"
                 size={24}
                 color={theme.colors.text}
               /> */}
-              <Text style={styles.emptyText}>No referrals yet</Text>
-            </View>
-          )}
-        </Card.Content>
-      </Card>
+                <Text style={styles.emptyText}>No referrals yet</Text>
+              </View>
+            )}
+          </Card.Content>
+        </Card>
 
-      <Snackbar
-        visible={visibleSnackbar}
-        onDismiss={() => setVisibleSnackbar(false)}
-        duration={3000}
-        style={{ backgroundColor: theme.colors.primary }}
-      >
-        {snackbarMessage}
-      </Snackbar>
-    </ScrollView>
+        <Snackbar
+          visible={visibleSnackbar}
+          onDismiss={() => setVisibleSnackbar(false)}
+          duration={3000}
+          style={{ backgroundColor: theme.colors.primary }}
+        >
+          {snackbarMessage}
+        </Snackbar>
+      </ScrollView>
+    </>
   );
 }
 

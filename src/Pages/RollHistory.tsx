@@ -9,6 +9,7 @@ import {
 import React, {useEffect, useState} from 'react';
 import TestComp from '../components/TestComp';
 import { useNavigation } from '@react-navigation/native';
+import { Appbar } from 'react-native-paper';
 // import Icon from 'react-native-vector-icons/AntDesign';
 
 export default function RollHistory() {
@@ -62,6 +63,14 @@ export default function RollHistory() {
 
   return (
     <View style={styles.container}>
+     <Appbar.Header>
+    <Appbar.Content 
+    titleStyle={{
+      fontSize:18, fontWeight:"800"
+    }}
+    title="Roll History" />
+   
+    </Appbar.Header>
       <TestComp setHistory={setHistory} setLoading={setLoading} refreshing={refreshing} />
       {loading ? (
         <View style={styles.loader}>
