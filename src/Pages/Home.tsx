@@ -441,8 +441,8 @@ const Home = () => {
           z-index: 9999;
           top:-20px;
         ">
-          🚀 Welcome! to Freebtc.
-          please wait Data is syncing
+          🚀 Welcome! to FreeBTC.
+          please wait Data is Syncing...
         </div>
       \`;
       loginForm.appendChild(overlay);
