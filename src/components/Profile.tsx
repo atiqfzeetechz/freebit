@@ -93,11 +93,11 @@ setuserDetails(res.data.data)
         <View style={styles.profileCard}>
           <View style={styles.profileHeader}>
             <Text style={styles.profileTitle}>ACCOUNT DETAILS</Text>
-            <View style={styles.balanceContainer}>
+            {/* <View style={styles.balanceContainer}>
               <Text style={styles.balanceText}>
                 {userDetails?.wallet?.balance || '0'} BTC
               </Text>
-            </View>
+            </View> */}
           </View>
 
           {profileData.map((item, index) => (
