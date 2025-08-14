@@ -6,34 +6,36 @@ import {
   ActivityIndicator,
   TouchableOpacity,
 } from 'react-native';
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import TestComp from '../components/TestComp';
 import { useNavigation } from '@react-navigation/native';
 import { Appbar } from 'react-native-paper';
+import { hp } from '../helper/hpwp';
 // import Icon from 'react-native-vector-icons/AntDesign';
 
 export default function RollHistory() {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const navigation = useNavigation()
+  const navigation = useNavigation();
 
   const handleRefresh = () => {
     setRefreshing(true);
     setTimeout(() => setRefreshing(false), 1000);
   };
 
-  useEffect(()=>{
+  useEffect(() => {
     navigation.setOptions({
-      headerRight:()=><TouchableOpacity style={{marginRight:20}} onPress={handleRefresh}>
-         {/* <Icon name="reload1" size={20} color="#900" />; */}
-         
-         </TouchableOpacity>
-    })
-  },[])
+      headerRight: () => (
+        <TouchableOpacity style={{ marginRight: 20 }} onPress={handleRefresh}>
+          {/* <Icon name="reload1" size={20} color="#900" />; */}
+        </TouchableOpacity>
+      ),
+    });
+  }, []);
   const formatBTC = amount => parseFloat(amount).toFixed(8) + ' BTC';
 
-  const renderItem = ({item}:any) => (
+  const renderItem = ({ item }: any) => (
     <>
       {item?.game == 'FREE' && (
         <View style={styles.card}>
@@ -52,7 +54,8 @@ export default function RollHistory() {
               style={[
                 styles.value,
                 parseFloat(item.profit) >= 0 ? styles.profit : styles.loss,
-              ]}>
+              ]}
+            >
               {formatBTC(item.profit)}
             </Text>
           </View>
@@ -63,33 +66,41 @@ export default function RollHistory() {
 
   return (
     <View style={styles.container}>
-     <Appbar.Header>
-    <Appbar.Content 
-    titleStyle={{
-      fontSize:18, fontWeight:"800"
-    }}
-    title="Roll History" />
-   
-    </Appbar.Header>
-      <TestComp setHistory={setHistory} setLoading={setLoading} refreshing={refreshing} />
-      {loading ? (
-        <View style={styles.loader}>
-          <ActivityIndicator size="large" color="#6200ee" />
-          <Text style={{marginTop: 10, color: '#6200ee'}}>Loading...</Text>
+      <Appbar.Header>
+        <Appbar.Content
+          titleStyle={{
+            fontSize: 18,
+            fontWeight: '800',
+          }}
+          title="Roll History"
+        />
+      </Appbar.Header>
+      <TestComp
+        setHistory={setHistory}
+        setLoading={setLoading}
+        refreshing={refreshing}
+      />
+      
+      {loading&&
+        <View style={styles.MainLoader}>
+          <ActivityIndicator size="large" color="#1709d8" />
+          <Text style={{ marginTop: 10, color: '#6200ee' }}>Loading...</Text>
         </View>
-      ) : history.length ? (
+       }
+
+      {history.length ? (
         <FlatList
           data={history}
           keyExtractor={(item, index) => index.toString()}
           renderItem={renderItem}
-          contentContainerStyle={{padding: 16}}
+          contentContainerStyle={{ padding: 16 }}
           refreshing={refreshing}
           onRefresh={handleRefresh}
           showsVerticalScrollIndicator={false}
         />
       ) : (
         <View style={styles.loader}>
-          <Text style={{fontSize: 16, color: '#999'}}>No history found.</Text>
+          <Text style={{ fontSize: 16, color: '#999' }}>No history found.</Text>
         </View>
       )}
     </View>
@@ -97,15 +108,26 @@ export default function RollHistory() {
 }
 
 const styles = StyleSheet.create({
-  container: {flex: 1, backgroundColor: '#f9f9f9'},
-  loader: {flex: 1, justifyContent: 'center', alignItems: 'center'},
+  container: { flex: 1, backgroundColor: '#f9f9f9' },
+  loader: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  MainLoader: {
+    position: 'absolute',
+    top: 0,
+    zIndex: 999,
+    left: 0,
+    height: '100%',
+    width: '100%',
+    backgroundColor: 'rgba(136, 146, 155, 0.5)',
+    justifyContent:"center",
+    alignItems:"center"
+  },
   card: {
     backgroundColor: '#fff',
     borderRadius: 12,
     padding: 16,
     marginBottom: 14,
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 2,
@@ -137,19 +159,17 @@ const styles = StyleSheet.create({
   },
 });
 
-
-
 // import { StyleSheet, View, FlatList } from 'react-native';
 // import React, { useEffect, useState } from 'react';
 // import useAxios from '../hooks/useAxios';
 // import { useNavigation } from '../utils/dalal';
-// import { 
-//   IconButton, 
-//   Text, 
-//   Card, 
-//   Divider, 
-//   ActivityIndicator, 
-//   useTheme 
+// import {
+//   IconButton,
+//   Text,
+//   Card,
+//   Divider,
+//   ActivityIndicator,
+//   useTheme
 // } from 'react-native-paper';
 
 // export default function RollHistory() {
@@ -186,9 +206,9 @@ const styles = StyleSheet.create({
 //   useEffect(() => {
 //     navigation.setOptions({
 //       headerRight: () => (
-//         <IconButton 
-//           icon="refresh" 
-//           size={25} 
+//         <IconButton
+//           icon="refresh"
+//           size={25}
 //           onPress={handleRefresh}
 //           disabled={refreshing}
 //         />
@@ -205,7 +225,7 @@ const styles = StyleSheet.create({
 //     const minutes = date.getMinutes().toString().padStart(2, '0');
 
 //     const monthNames = [
-//       'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+//       'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
 //       'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
 //     ];
 //     const month = monthNames[date.getMonth()];

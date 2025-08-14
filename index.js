@@ -1,37 +1,38 @@
-/**
- * @format
- */
-
-import { AppRegistry, NativeModules, Platform } from 'react-native';
+// index.js or your entry point
+import { AppRegistry } from 'react-native';
 import App from './App';
 import { name as appName } from './app.json';
 import messaging from '@react-native-firebase/messaging';
-import AutoStart from 'react-native-autostart';
-import { getMyRewardPoints, getWebViewRef } from './src/utils/globalWebViewRef';
+import notifee from '@notifee/react-native';
 
-// getWebViewRef 
- 
+
+messaging().setAutoInitEnabled(false)
+// Background handler
 messaging().setBackgroundMessageHandler(async remoteMessage => {
-  console.log('bg message received:', remoteMessage);
-  const ref = getWebViewRef()?.current?.current;
-  console.log( getWebViewRef())
-  console.log( getWebViewRef().current)
-  if (ref) {
-    getMyRewardPoints();
-    ref.injectJavaScript(`alert("Notification Received in Background");`);
-  } else {
-    console.log('WebViewRef not available in background');
-  }
-  // if (Platform.OS === 'android') {
-  //   NativeModules.IntentLauncher.sendBroadcast("com.freebit.OPEN_APP");
-  // }
+  console.log('Background message received:', remoteMessage);
+
+  // Create channel if not already created
+  const channelId = await notifee.createChannel({
+    id: 'default_channel',
+    name: 'Default Channel',
+    vibration: true,
+    vibrationPattern: [300, 500],
+    sound: 'server_down_alert', // put the file in android/app/src/main/res/raw
+  });
+
+  // Show notification
+  await notifee.displayNotification({
+    title: 'FreeBTC roll Alert ⚠',
+    body: 'Click to Roll',
+    android: {
+      channelId,
+      vibrationPattern: [300, 500],
+      sound: 'server_down_alert',
+      pressAction: {
+        id: 'default',
+      },
+    },
+  });
 });
-
-console.log('AutoStart isCustomAndroid:', AutoStart.isCustomAndroid());
-// if(AutoStart.isCustomAndroid()) {
-//     AutoStart.startAutostartSettings();
-// }
-
-AutoStart.startAutostartSettings();
 
 AppRegistry.registerComponent(appName, () => App);

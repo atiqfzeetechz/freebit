@@ -29,6 +29,8 @@ import Password from '../../assets/svg/key.svg';
 import EyeSlash from '../../assets/svg/eye-slash.svg';
 import Eye from '../../assets/svg/eye.svg';
 import Referal from '../../assets/svg/referal.svg';
+import MyButton from './ui/Button';
+import ErrorDisplay from './ui/ErrorDisplay';
 
 export default function LoginForm(props: any) {
   const { onSubmit, propsEmail, propsPassword, actTab } = props;
@@ -42,8 +44,8 @@ export default function LoginForm(props: any) {
   const [referCode, setReferCode] = useState('');
   const [secureTextEntry, setSecureTextEntry] = useState(true);
   const theme = useTheme();
-  const { fetchData } = useAxios();
-  const { login,FcmToken } = useAuth();
+  const { fetchData, error ,setError } = useAxios();
+  const { login, FcmToken } = useAuth();
   const [SHOWHIDESsTYLES, SETSHOWHIDESSTYLE] = useState({});
   const [visible, setVisible] = useState(false);
 
@@ -51,7 +53,7 @@ export default function LoginForm(props: any) {
     email: string;
     password: string;
     twoFACode?: string;
-    FcmToken:string | undefined | null
+    FcmToken: string | undefined | null;
   }) => {
     try {
       console.log(payload);
@@ -59,10 +61,12 @@ export default function LoginForm(props: any) {
         url: '/user/auth/signin',
         method: 'POST',
         data: payload,
+        loader: true,
       });
       console.log(res);
       const data = res.data;
       // return
+      console.log(data);
       const isValidUser = data.data.user?.isValidUser;
 
       if (isValidUser === 'invalid') {
@@ -75,6 +79,7 @@ export default function LoginForm(props: any) {
         return;
       }
       const token = data.data.jwt;
+
       login(token, { ...payload, FA2: payload.twoFACode }, 'login');
     } catch (error) {
       console.log(error);
@@ -84,16 +89,16 @@ export default function LoginForm(props: any) {
   const handleSubmit = () => {
     const isValidEmail = validateEmail(email);
     if (!isValidEmail) return;
-    console.log({password})
+    console.log({ password });
     if (!ValidatePassword(password)) return;
     if (activeTab === 'login') {
       let payload = {
         email: email,
         password: password,
         twoFACode: twoFACode || undefined,
-        FcmToken:FcmToken
+        FcmToken: FcmToken,
       };
-      console.log(payload)
+      console.log(payload);
       userLogin(payload);
       return;
     }
@@ -105,7 +110,7 @@ export default function LoginForm(props: any) {
         password,
         twoFACode,
         referrerCode: referCode,
-          FcmToken:FcmToken
+        FcmToken: FcmToken,
       });
     }
   };
@@ -116,6 +121,7 @@ export default function LoginForm(props: any) {
         url: '/user/auth/signUp',
         method: 'POST',
         data: payload,
+        loader: true,
       });
       console.log(data);
       const _data = data.data.data;
@@ -125,6 +131,7 @@ export default function LoginForm(props: any) {
       console.log(error);
     }
   };
+  console.log(error);
 
   return (
     <KeyboardAvoidingView
@@ -141,8 +148,12 @@ export default function LoginForm(props: any) {
               {/* Tab Buttons */}
               <SegmentedButtons
                 value={activeTab}
-                onValueChange={value =>
-                  setActiveTab(value as 'login' | 'signup')
+                onValueChange={value =>{
+                       setActiveTab(value as 'login' | 'signup')
+                       setError(null)
+
+                }
+                
                 }
                 buttons={[
                   {
@@ -166,7 +177,7 @@ export default function LoginForm(props: any) {
               >
                 {activeTab === 'login' ? 'Login' : 'Sign Up'}
               </Text>
-
+              {error && <ErrorDisplay apiError={error} />}
               {/* <FontAwesome name="rocket" size={30} color="#900" />; */}
               {/* Email */}
               <TextInput
@@ -236,12 +247,20 @@ export default function LoginForm(props: any) {
                   onChangeText={setReferCode}
                   style={styles.input}
                   mode="outlined"
-                  left={<TextInput.Icon icon={
-                    ()=><Referal height={20} width={20}></Referal>
-                  } />}
+                  left={
+                    <TextInput.Icon
+                      icon={() => <Referal height={20} width={20}></Referal>}
+                    />
+                  }
                 />
               )}
 
+              {/* <MyButton
+title='Login'
+variant='primary'
+// loading
+
+/> */}
               {/* Submit Button */}
               <Button
                 mode="contained"

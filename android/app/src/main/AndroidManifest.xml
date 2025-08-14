@@ -27,5 +27,8 @@
       </activity>
       <service android:name="com.voximplant.foregroundservice.VIForegroundService"> </service>
 
-    </application>
+      <meta-data
+        android:name="com.google.firebase.messaging.default_notification_sound"
+        android:resource="@raw/tone" />
+      </application>
 </manifest>

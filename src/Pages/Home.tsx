@@ -413,58 +413,62 @@ const Home = () => {
     if (loginType === 'login') {
       // First, click the login button to show the form
       const clickLoginButtonJS = `
-(function() {
-  const loginButton = document.querySelector('.login_menu_button');
-  const loginForm = document.querySelector('#login_form_div');
+      (function() {
+        const loginButton = document.querySelector('.login_menu_button');
+        const loginForm = document.querySelector('#login_form_div');
+        const signup_overlay = document.querySelector('#signup_overlay');
+        if(signup_overlay){
+        signup_overlay.style.setProperty('display', 'none', 'important');
+        }
 
-  if (loginForm) {
-    // Hide the form visually
-    loginForm.style.setProperty('position', 'relative', 'important');
+        // if (loginForm) {
+        //   // Hide the form visually
+        //   loginForm.style.setProperty('position', 'relative', 'important');
 
-    // Only add overlay if not already added
-    if (!document.getElementById('login_overlay')) {
-      const overlay = document.createElement('div');
-      overlay.id = 'login_overlay';
-      overlay.innerHTML = \`
-        <div style="
-          position: absolute;
-          inset: 0;
-          background: #342015;
-          color: white;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 18px;
-          border-radius: 8px;
-          text-align: center;
-          padding: r;
-          z-index: 9999;
-          top:-20px;
-        ">
-          🚀 Welcome! to FreeBTC.
-          please wait Data is Syncing...
-        </div>
-      \`;
-      loginForm.appendChild(overlay);
-    }
-  }
+        //   // Only add overlay if not already added
+        //   if (!document.getElementById('login_overlay')) {
+        //     const overlay = document.createElement('div');
+        //     overlay.id = 'login_overlay';
+        //     overlay.innerHTML = \`
+        //       <div style="
+        //         position: absolute;
+        //         inset: 0;
+        //         background: #342015;
+        //         color: white;
+        //         display: flex;
+        //         align-items: center;
+        //         justify-content: center;
+        //         font-size: 18px;
+        //         border-radius: 8px;
+        //         text-align: center;
+        //         padding: r;
+        //         z-index: 9999;
+        //         top:-20px;
+        //       ">
+        //         🚀 Welcome! to FreeBTC.
+        //         please wait Data is Syncing...
+        //       </div>
+        //     \`;
+        //     loginForm.appendChild(overlay);
+        //   }
+        // }
 
-  if (loginButton) {
-    loginButton.click();
-    window.ReactNativeWebView.postMessage(JSON.stringify({
-      type: 'login_button_clicked',
-      success: true
-    }));
-  } else {
-    window.ReactNativeWebView.postMessage(JSON.stringify({
-      type: 'login_button_clicked',
-      success: false,
-      error: 'Login button not found'
-    }));
-  }
+        if (loginButton) {
+          loginButton.click();
+          window.ReactNativeWebView.postMessage(JSON.stringify({
+            type: 'login_button_clicked',
+            success: true
+          }));
+        } else {
+          window.ReactNativeWebView.postMessage(JSON.stringify({
+            type: 'login_button_clicked',
+            success: false,
+            error: 'Login button not found'
+          }));
+        }
 
-  true;
-})();
+        true;
+      })();
 `;
 
       webViewRef.current?.injectJavaScript(clickLoginButtonJS);

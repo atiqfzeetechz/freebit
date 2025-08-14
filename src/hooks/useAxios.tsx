@@ -36,6 +36,7 @@ export default function useAxios() {
   const [error, setError] = useState<errorRes>();
   const {token} = useAuth();
   const {showLoader, hideLoader} = useLoader();
+  
 
   const instance = axios.create({
     baseURL: baseUrl,
@@ -105,5 +106,5 @@ export default function useAxios() {
     }
   };
 
-  return {fetchData, error};
+  return {fetchData, error ,setError};
 }

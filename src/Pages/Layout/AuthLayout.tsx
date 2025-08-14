@@ -23,6 +23,9 @@ import { useNavigationState, useRoute } from '@react-navigation/native';
 import messaging from '@react-native-firebase/messaging';
 import WebviewLayout from './WebviewLayout';
 
+import notifee, { AndroidImportance } from '@notifee/react-native';
+import { onDisplayNotification } from '../../utils/Notify';
+
 const Stack = createStackNavigator();
 
 const LoginFo = () => {
@@ -41,6 +44,7 @@ const LoginFo = () => {
     </View>
   );
 };
+
 
 const AuthLayout = () => {
   const { isLoggedIn, setReferalId, FcmToken, setFcmToken } = useAuth();
@@ -92,9 +96,13 @@ const AuthLayout = () => {
   }, []);
 
   useEffect(() => {
+
     const unsubscribe = messaging().onMessage(async remoteMessage => {
       console.log(remoteMessage);
-      setFcmToken();
+
+// onDisplayNotification()
+
+      // setFcmToken();
       // Alert.alert('A new FCM message arrived!', JSON.stringify(remoteMessage));
     });
 
@@ -123,7 +131,7 @@ const AuthLayout = () => {
   }, [isLoggedIn]);
   return (
     <>
-      {isLoggedIn && <WebviewLayout visible={false} />}
+      {/* {isLoggedIn && <WebviewLayout visible={false} />} */}
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {isLoggedIn ? (
           <>

@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { View, StyleSheet, Animated, Easing } from 'react-native';
-import { Text, Button, Icon, useTheme } from 'react-native-paper';
+import { Text, Button, Icon } from 'react-native-paper';
 
 const NotFound = ({
   icon = 'alert-circle-outline',
@@ -10,13 +10,10 @@ const NotFound = ({
   onActionPress,
   children,
 }) => {
-    console.log('called')
-  const theme = useTheme();
-  const fadeAnim = new Animated.Value(0);
-  const scaleAnim = new Animated.Value(0.95);
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.95)).current;
 
   useEffect(() => {
-    // Entry animation
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
@@ -31,38 +28,24 @@ const NotFound = ({
         useNativeDriver: true,
       }),
     ]).start();
-  }, []);
+  }, [fadeAnim, scaleAnim]);
 
   return (
-    <Animated.View 
+    <Animated.View
       style={[
         styles.container,
-        { 
-          opacity: fadeAnim,
-          transform: [{ scale: scaleAnim }],
-          backgroundColor: theme.colors.background,
-        }
+        { opacity: fadeAnim, transform: [{ scale: scaleAnim }] },
       ]}
     >
       <View style={styles.content}>
-        <Icon 
-          source={icon} 
-          size={48} 
-          color={theme.colors.primary}
-          style={styles.icon}
-        />
+        <Icon source={icon} size={48} color="#1976D2" style={styles.icon} />
 
-        <Text style={[styles.title, { color: theme.colors.text }]}>
-          {title}
-        </Text>
-
-        <Text style={[styles.description, { color: theme.colors.secondary }]}>
-          {description}
-        </Text>
+        <Text style={styles.title}>{title}</Text>
+        <Text style={styles.description}>{description}</Text>
 
         {actionText && (
-          <Button 
-            mode="contained" 
+          <Button
+            mode="contained"
             onPress={onActionPress}
             style={styles.button}
             contentStyle={styles.buttonContent}
@@ -71,11 +54,7 @@ const NotFound = ({
           </Button>
         )}
 
-        {children && (
-          <View style={styles.childrenContainer}>
-            {children}
-          </View>
-        )}
+        {children && <View style={styles.childrenContainer}>{children}</View>}
       </View>
     </Animated.View>
   );
@@ -101,12 +80,14 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: 8,
+    color: '#000',
   },
   description: {
     fontSize: 16,
     textAlign: 'center',
     marginBottom: 24,
     lineHeight: 24,
+    color: '#555',
   },
   button: {
     borderRadius: 8,
