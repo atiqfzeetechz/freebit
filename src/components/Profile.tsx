@@ -134,7 +134,7 @@ setuserDetails(res.data.data)
               setModalVisible(true);
             }}
           >
-            Set your Freebitco Pasword
+            Save Password
           </Button>
 
           <Button
@@ -148,7 +148,7 @@ setuserDetails(res.data.data)
         </View>
 
         {/* Referral Section */}
-        <View style={styles.referralCard}>
+        {/* <View style={styles.referralCard}>
           <Text style={styles.referralTitle}>YOUR REFERRAL CODE</Text>
           <View style={styles.referralCodeContainer}>
             <Text style={styles.referralCode}>
@@ -158,7 +158,7 @@ setuserDetails(res.data.data)
           <Text style={styles.referralText}>
             Share with friends to earn bonuses
           </Text>
-        </View>
+        </View> */}
       </ScrollView>
       <ChangePasswordModal
         modalVisible={modalVisible}

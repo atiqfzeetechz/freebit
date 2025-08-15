@@ -209,6 +209,7 @@ const DashboardScreen = () => {
   const [countdown, setCountdown] = useState({minutes: '00', seconds: '00'});
   const [timerInterval, setTimerInterval] = useState<NodeJS.Timeout | null>(null);
   const [lastSyncDisplay, setLastSyncDisplay] = useState('Never synced');
+  const [teamsRolls,setTeamRolls]=useState('')
 
   // const [lastSync,setlastSync]=useState('')
 
@@ -239,8 +240,22 @@ const updateLastSyncDisplay = () => {
   }
 };
 
+const getDownlineRollCount = async ()=>{
+  const res = await fetchData({
+    url:"/user/auth/downlinerolls",
+    method:"GET"
+  })
+  const response = res.data
+  if(response.success){
+
+    setTeamRolls(response.data)
+  }
+  console.log(response)
+}
+
 useEffect(() => {
   updateLastSyncDisplay(); // Initial update
+  getDownlineRollCount() 
   
   // Update every second for more accurate timing
   const interval = setInterval(() => {
@@ -323,6 +338,8 @@ useEffect(() => {
       // ✅ Clean up on unmount or btBalance change
     }
   }, [btBalance]);
+
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar backgroundColor="#4e91fc" barStyle="light-content" />
@@ -450,6 +467,13 @@ useEffect(() => {
          <View style={styles.box}>
           <Text style={styles.title}>Last Sync </Text>
           <Text style={[styles.value]}>{lastSyncDisplay}</Text>
+        </View>
+        <View style={styles.box}>
+          <Text style={styles.title}>Team Rolls</Text>
+          <Text style={[styles.value]}>
+            {teamsRolls?.totalCount}
+            {/* {btBalance?.minutes} : {btBalance?.seconds} */}
+          </Text>
         </View>
       </ScrollView>
     </SafeAreaView>
