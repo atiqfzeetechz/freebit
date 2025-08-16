@@ -26,6 +26,7 @@ import { useData } from '../hooks/useGlobalData';
 import { startForegroundService } from '../helper/service';
 import { setWebViewRef } from '../utils/globalWebViewRef';
 import { ActivityIndicator } from 'react-native-paper';
+import FixNowModal from '../helper/FixNowModal';
 
 const formatDateTime = () => {
   const now = new Date();
@@ -1303,6 +1304,8 @@ const Home = () => {
   };
   const [hideOverlay, sethideOverlay] = useState(false);
 
+  const [showModalTrue, setShowModalTrue] = useState(false);
+
   return (
     <>
       <View
@@ -1311,6 +1314,18 @@ const Home = () => {
         }}
       >
         <Toast position="top" swipeable topOffset={100} />
+        <FixNowModal
+  visible={showModalTrue}
+  onClose={() => setShowModalTrue(false)}
+  title="Issue found"
+  message="Your device or Account not properly Set for Notification."
+  buttonText="Login Now"
+  onButtonPress={() => {
+    // setShowModal(false);
+
+  }}
+  userDetails={userDetails}
+/>
       </View>
       {token ? (
         <>
@@ -1322,7 +1337,11 @@ const Home = () => {
               ViewStyle?.dashboard,
             ]}
           >
-            <DashBoard webViewData={webViewData} />
+            <DashBoard webViewData={webViewData}
+            showModalTrue ={showModalTrue}
+            
+            setShowModalTrue={setShowModalTrue}
+            />
           </View>
 
           <View style={[styles.hiddenWebViewContainer, ViewStyle?.webView]}>

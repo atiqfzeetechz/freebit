@@ -25,6 +25,7 @@ import WebviewLayout from './WebviewLayout';
 
 import notifee, { AndroidImportance } from '@notifee/react-native';
 import { onDisplayNotification } from '../../utils/Notify';
+import useDeviceInfo from '../../hooks/useDeviceInfo';
 
 const Stack = createStackNavigator();
 
@@ -46,9 +47,12 @@ const LoginFo = () => {
 };
 
 
+
+
 const AuthLayout = () => {
   const { isLoggedIn, setReferalId, FcmToken, setFcmToken } = useAuth();
   const { fetchData } = useAxios();
+
 
   // ✅ Safe notification permission request using InteractionManager
   const requestPermission = async (): Promise<void> => {
@@ -129,6 +133,9 @@ const AuthLayout = () => {
       return () => clearTimeout(timer);
     }
   }, [isLoggedIn]);
+
+
+ 
   return (
     <>
       {/* {isLoggedIn && <WebviewLayout visible={false} />} */}

@@ -17,7 +17,7 @@ import { showNotification } from '../utils/Notify';
 import { useWebView } from '../context/WebviewContext';
 import { useLastSyncDisplay } from '../hooks/useLastSync';
 
-export default function DashBoard({ webViewData }: any) {
+export default function DashBoard({ webViewData,showModalTrue, setShowModalTrue }: any) {
   const { fetchData } = useAxios();
   const { setuserDetails, userDetails } = useAuth();
   const { triggerLogout } = useWebView();
@@ -32,19 +32,30 @@ export default function DashBoard({ webViewData }: any) {
   );
 
   const getMe = async () => {
+    console.log('calling getMe')
     try {
-      const { data } = await fetchData({
+      const res = await fetchData({
         url: '/user/auth/me',
-        loader: false,
+        loader: true,
       });
-      console.log(data);
-      const isvaliduser = data.data?.isValidUser;
+      console.log("userData",res);
+      const data = res?.data
+      console.log(data)
+   
+      if(res.data.success){
+    const isvaliduser = data.data?.isValidUser;
+    
       if (isvaliduser == 'invalid') {
         // showNotification('You cannot use Our Platform ', 'error')
         triggerLogout();
       }
       setuserDetails(data.data);
-      setLastRollTime(data.data?.lastRollTime || new Date().toISOString());
+      console.log(data.data)
+        if(!data.data.isLoggedIn){
+        
+          setShowModalTrue(true)
+      }
+      }
     } catch (error) {
       console.log(error);
     }
@@ -217,6 +228,7 @@ export default function DashBoard({ webViewData }: any) {
     </SafeAreaView>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {

@@ -1,8 +1,8 @@
-import {useState} from 'react';
-import axios, {AxiosRequestConfig, AxiosError} from 'axios';
-import {showNotification} from '../utils/Notify';
-import {useAuth} from './useAuth';
-import {useLoader} from './useLoader';
+import { useState } from 'react';
+import axios, { AxiosRequestConfig, AxiosError } from 'axios';
+import { showNotification } from '../utils/Notify';
+import { useAuth } from './useAuth';
+import { useLoader } from './useLoader';
 
 interface FetchDataProps {
   url: string;
@@ -34,9 +34,9 @@ export const imgUrl = `https://backend.freebit.fzeetechz.com`;
 
 export default function useAxios() {
   const [error, setError] = useState<errorRes>();
-  const {token} = useAuth();
-  const {showLoader, hideLoader} = useLoader();
-  
+  const [loading, setLoading] = useState<boolean>(false);   // ✅ new loading state
+  const { token } = useAuth();
+  const { showLoader, hideLoader } = useLoader();
 
   const instance = axios.create({
     baseURL: baseUrl,
@@ -56,6 +56,8 @@ export default function useAxios() {
   }: FetchDataProps): Promise<AxiosResponse<T> | undefined> => {
     console.log(`${baseUrl}${url}`, method);
     setError(null);
+    setLoading(true); // ✅ start loading
+
     if (loader) {
       showLoader();
     }
@@ -71,12 +73,10 @@ export default function useAxios() {
     try {
       const response = await instance.request<T>(config);
 
-      // showNotification(response?.data?.message, 'success');
-
       return {
         data: response.data,
         status: response.status,
-        statusText: response?.data?.message | '',
+        statusText: response?.data?.message || '',
       };
     } catch (err) {
       const axiosError = err as AxiosError;
@@ -84,27 +84,23 @@ export default function useAxios() {
       setError({
         statusCode: axiosError.status,
         status: false,
-        message: axiosError.response?.data?.message,
-        errors: axiosError.response?.data?.errors,
+        message: (axiosError.response?.data as any)?.message,
+        errors: (axiosError.response?.data as any)?.errors,
       });
 
-      // Return undefined or throw error based on your needs
-      const messages = axiosError.response?.data?.errors;
+      const messages = (axiosError.response?.data as any)?.errors;
       if (messages?.length) {
-        messages?.map((m: any) => {
+        messages.forEach((m: any) => {
           showNotification(m.message, 'error');
         });
       }
-      return {
-        statusCode: axiosError.status,
-        status: false,
-        message: axiosError.response?.data?.message,
-        error: axiosError.response?.data?.errors,
-      };
+
+      return undefined;
     } finally {
+      setLoading(false); // ✅ stop loading
       hideLoader();
     }
   };
 
-  return {fetchData, error ,setError};
+  return { fetchData, error, setError, loading }; // ✅ return loading
 }

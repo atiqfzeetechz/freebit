@@ -13,7 +13,7 @@ messaging().setBackgroundMessageHandler(async remoteMessage => {
 
   // Create channel if not already created
   const channelId = await notifee.createChannel({
-    id: 'default_channel',
+    id: 'default_channel11',
     name: 'Default Channel',
     vibration: true,
     vibrationPattern: [300, 500],
@@ -22,17 +22,19 @@ messaging().setBackgroundMessageHandler(async remoteMessage => {
 
   // Show notification
   await notifee.displayNotification({
-    title: 'FreeBTC roll Alert ⚠',
-    body: 'Click to Roll',
-    android: {
-      channelId,
-      vibrationPattern: [300, 500],
-      sound: 'server_down_alert',
-      pressAction: {
-        id: 'default',
-      },
+  title: 'Roll is ready!',
+  body: 'Open the app before it expires',
+  android: {
+    channelId,
+    vibrationPattern: [300, 500],
+    sound: 'server_down_alert',
+    smallIcon: 'ic_notification', // ✅ drawable or mipmap icon name (without .png)
+    largeIcon: 'ic_notification', // ✅ optional: for big image/logo on notification
+    pressAction: {
+      id: 'default',
     },
-  });
+  },
+});
 });
 
 AppRegistry.registerComponent(appName, () => App);

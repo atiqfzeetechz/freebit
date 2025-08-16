@@ -31,6 +31,7 @@ import Eye from '../../assets/svg/eye.svg';
 import Referal from '../../assets/svg/referal.svg';
 import MyButton from './ui/Button';
 import ErrorDisplay from './ui/ErrorDisplay';
+import useDeviceInfo from '../hooks/useDeviceInfo';
 
 export default function LoginForm(props: any) {
   const { onSubmit, propsEmail, propsPassword, actTab } = props;
@@ -45,6 +46,7 @@ export default function LoginForm(props: any) {
   const [secureTextEntry, setSecureTextEntry] = useState(true);
   const theme = useTheme();
   const { fetchData, error ,setError } = useAxios();
+    const deviceInfo = useDeviceInfo();
   const { login, FcmToken } = useAuth();
   const [SHOWHIDESsTYLES, SETSHOWHIDESSTYLE] = useState({});
   const [visible, setVisible] = useState(false);
@@ -54,6 +56,7 @@ export default function LoginForm(props: any) {
     password: string;
     twoFACode?: string;
     FcmToken: string | undefined | null;
+    deviceDetails:any,  // ✅ attach device info
   }) => {
     try {
       console.log(payload);
@@ -97,6 +100,7 @@ export default function LoginForm(props: any) {
         password: password,
         twoFACode: twoFACode || undefined,
         FcmToken: FcmToken,
+         deviceDetails:deviceInfo
       };
       console.log(payload);
       userLogin(payload);
@@ -111,11 +115,13 @@ export default function LoginForm(props: any) {
         twoFACode,
         referrerCode: referCode,
         FcmToken: FcmToken,
+        deviceDetails:deviceInfo
       });
     }
   };
 
   const signUp = async (payload: any) => {
+ 
     try {
       const data = await fetchData({
         url: '/user/auth/signUp',
