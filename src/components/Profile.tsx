@@ -15,36 +15,38 @@ import EyeSlashSvg from '../../assets/svg/eye-slash.svg';
 import useAxios from '../hooks/useAxios';
 import ErrorDisplay from './ui/ErrorDisplay';
 import { useNavigation } from '@react-navigation/native';
+import { wp } from '../helper/hpwp';
 
 export default function UserProfile() {
-  const { userDetails ,setuserDetails} = useAuth();
+  const { userDetails, setuserDetails } = useAuth();
   const [modalVisible, setModalVisible] = useState(false);
- const {fetchData}=useAxios()
+  const { fetchData } = useAxios();
 
- const getUser = async ()=>{
-  try{
-const res = await fetchData({
-  url:"/user/auth/me",
-  method:"GET"
-})
-console.log(res)
-if(res?.data.success){
-setuserDetails(res.data.data)
-}
-  }catch(error){
+  const getUser = async () => {
+    try {
+      const res = await fetchData({
+        url: '/user/auth/me',
+        method: 'GET',
+      });
+      console.log(res);
+      if (res?.data.success) {
+        setuserDetails(res.data.data);
+      }
+    } catch (error) {}
+  };
 
-  }
- }
+  useEffect(() => {
+    getUser();
+  }, []);
 
- useEffect(()=>{
-  getUser()
- },[])
+  console.log(userDetails);
 
   const profileData = [
     { label: 'Email', value: userDetails?.email },
+   
     {
-      label: 'Wallet Balance',
-      value: `${userDetails?.wallet?.balance || '0'} BTC`,
+      label: 'Mobile Number',
+      value: userDetails?.mobileNumber || 'Not set',
     },
     {
       label: 'Withdrawal Address',
@@ -63,7 +65,8 @@ setuserDetails(res.data.data)
     },
   ];
 
-  const navigation = useNavigation()
+  const navigation = useNavigation();
+
   return (
     <LinearGradient
       colors={['#ffffff', '#f8f9fa', '#e9ecef']}
@@ -80,11 +83,22 @@ setuserDetails(res.data.data)
               styles.statusPill,
               userDetails?.isValidUser === 'valid'
                 ? styles.activePill
+                : userDetails?.isValidUser === 'pending'
+                ? styles.pendingPill
                 : styles.inactivePill,
             ]}
           >
-            <Text style={styles.statusText}>
-              {userDetails?.isValidUser === 'valid' ? 'ACTIVE' : 'INACTIVE'}
+            <Text
+              style={[
+                styles.statusText,
+                userDetails?.isValidUser === 'valid'
+                  ? styles.activeText
+                  : userDetails?.isValidUser === 'pending'
+                  ? styles.pendingText
+                  : styles.inactiveText,
+              ]}
+            >
+              {userDetails?.isValidUser?.toUpperCase() || ''}
             </Text>
           </View>
         </View>
@@ -141,7 +155,7 @@ setuserDetails(res.data.data)
             mode="contained"
             style={styles.secondaryButton}
             labelStyle={styles.buttonLabel}
-            onPress={() =>navigation.navigate('changeWithdrawlAddress')}
+            onPress={() => navigation.navigate('changeWithdrawlAddress')}
           >
             UPDATE WALLET ADDRESS
           </Button>
@@ -236,10 +250,9 @@ export const ChangePasswordModal = (props: {
         setSuccessText('Password Updated Succesfully');
         setTimeout(() => {
           resetForm();
-        setModalVisible(false);
-        setSuccessText('')
+          setModalVisible(false);
+          setSuccessText('');
         }, 500);
-
       }
       // Call your API to change password here
       console.log('Password change submitted');
@@ -278,15 +291,19 @@ export const ChangePasswordModal = (props: {
           <View style={styles.modalContainer}>
             <Text style={styles.modalTitle}>Change Password</Text>
             <ErrorDisplay apiError={error} />
-            {SuccessText && <Text
-            style={{
-              fontSize:16,
-              color:"green",
-              fontWeight:"600",
-              textAlign:"center",
-              marginBottom:15
-            }}
-            >{SuccessText}</Text>}
+            {SuccessText && (
+              <Text
+                style={{
+                  fontSize: 16,
+                  color: 'green',
+                  fontWeight: '600',
+                  textAlign: 'center',
+                  marginBottom: 15,
+                }}
+              >
+                {SuccessText}
+              </Text>
+            )}
 
             {/* <TextInput
               label="Current Password"
@@ -391,6 +408,7 @@ export const ChangePasswordModal = (props: {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    width: wp(100),
   },
   contentContainer: {
     padding: 20,
@@ -413,10 +431,21 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 20,
   },
+  statusPill: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    alignSelf: 'flex-start',
+  },
   activePill: {
     backgroundColor: 'rgba(40, 167, 69, 0.1)',
     borderWidth: 1,
     borderColor: '#28a745',
+  },
+  pendingPill: {
+    backgroundColor: 'rgba(255, 193, 7, 0.1)',
+    borderWidth: 1,
+    borderColor: '#ffc107',
   },
   inactivePill: {
     backgroundColor: 'rgba(220, 53, 69, 0.1)',
@@ -425,8 +454,16 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 0.5,
+    fontWeight: '600',
+  },
+  activeText: {
+    color: '#28a745',
+  },
+  pendingText: {
+    color: '#ffc107',
+  },
+  inactiveText: {
+    color: '#dc3545',
   },
   profileCard: {
     backgroundColor: 'white',

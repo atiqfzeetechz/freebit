@@ -29,6 +29,7 @@ import Password from '../../assets/svg/key.svg';
 import EyeSlash from '../../assets/svg/eye-slash.svg';
 import Eye from '../../assets/svg/eye.svg';
 import Referal from '../../assets/svg/referal.svg';
+import Telephone from '../../assets/svg/telephone.svg';
 import MyButton from './ui/Button';
 import ErrorDisplay from './ui/ErrorDisplay';
 import useDeviceInfo from '../hooks/useDeviceInfo';
@@ -41,12 +42,13 @@ export default function LoginForm(props: any) {
   );
   const [email, setEmail] = useState(propsEmail || '');
   const [password, setPassword] = useState(propsPassword || '');
+  const [mobileNumber, setMobileNumber] = useState('');
   const [twoFACode, setTwoFACode] = useState('');
   const [referCode, setReferCode] = useState('');
   const [secureTextEntry, setSecureTextEntry] = useState(true);
   const theme = useTheme();
-  const { fetchData, error ,setError } = useAxios();
-    const deviceInfo = useDeviceInfo();
+  const { fetchData, error, setError } = useAxios();
+  const deviceInfo = useDeviceInfo();
   const { login, FcmToken } = useAuth();
   const [SHOWHIDESsTYLES, SETSHOWHIDESSTYLE] = useState({});
   const [visible, setVisible] = useState(false);
@@ -56,7 +58,7 @@ export default function LoginForm(props: any) {
     password: string;
     twoFACode?: string;
     FcmToken: string | undefined | null;
-    deviceDetails:any,  // ✅ attach device info
+    deviceDetails: any; // ✅ attach device info
   }) => {
     try {
       console.log(payload);
@@ -100,7 +102,7 @@ export default function LoginForm(props: any) {
         password: password,
         twoFACode: twoFACode || undefined,
         FcmToken: FcmToken,
-         deviceDetails:deviceInfo
+        deviceDetails: deviceInfo,
       };
       console.log(payload);
       userLogin(payload);
@@ -108,6 +110,19 @@ export default function LoginForm(props: any) {
     }
 
     if (activeTab === 'signup') {
+      if (password.length < 8) {
+        showNotification('Password must be of 8 digits', 'error');
+        return;
+      }
+      if (!mobileNumber) {
+        showNotification('Mobile Number is Required', 'error');
+        return;
+      }
+      if (mobileNumber.length < 10) {
+        showNotification('Inavlid Mobile Number', 'error');
+        return;
+      }
+
       signUp({
         email,
         activeTab,
@@ -115,13 +130,13 @@ export default function LoginForm(props: any) {
         twoFACode,
         referrerCode: referCode,
         FcmToken: FcmToken,
-        deviceDetails:deviceInfo
+        deviceDetails: deviceInfo,
+        mobileNumber: mobileNumber,
       });
     }
   };
 
   const signUp = async (payload: any) => {
- 
     try {
       const data = await fetchData({
         url: '/user/auth/signUp',
@@ -154,13 +169,10 @@ export default function LoginForm(props: any) {
               {/* Tab Buttons */}
               <SegmentedButtons
                 value={activeTab}
-                onValueChange={value =>{
-                       setActiveTab(value as 'login' | 'signup')
-                       setError(null)
-
-                }
-                
-                }
+                onValueChange={value => {
+                  setActiveTab(value as 'login' | 'signup');
+                  setError(null);
+                }}
                 buttons={[
                   {
                     value: 'login',
@@ -247,18 +259,36 @@ export default function LoginForm(props: any) {
 
               {/* Referral Code */}
               {activeTab === 'signup' && (
-                <TextInput
-                  label="Referral Code"
-                  value={referCode}
-                  onChangeText={setReferCode}
-                  style={styles.input}
-                  mode="outlined"
-                  left={
-                    <TextInput.Icon
-                      icon={() => <Referal height={20} width={20}></Referal>}
-                    />
-                  }
-                />
+                <>
+                  <TextInput
+                    label="Mobile Number"
+                    value={mobileNumber}
+                    onChangeText={setMobileNumber}
+                    style={styles.input}
+                    mode="outlined"
+                    left={
+                      <TextInput.Icon
+                        icon={() => (
+                          <Telephone height={20} width={20}></Telephone>
+                        )}
+                      />
+                    }
+                    keyboardType="number-pad"
+                    maxLength={10}
+                  />
+                  <TextInput
+                    label="Referral Code"
+                    value={referCode}
+                    onChangeText={setReferCode}
+                    style={styles.input}
+                    mode="outlined"
+                    left={
+                      <TextInput.Icon
+                        icon={() => <Referal height={20} width={20}></Referal>}
+                      />
+                    }
+                  />
+                </>
               )}
 
               {/* <MyButton
