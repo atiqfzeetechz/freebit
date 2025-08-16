@@ -6,7 +6,6 @@ import messaging from '@react-native-firebase/messaging';
 import notifee from '@notifee/react-native';
 
 
-messaging().setAutoInitEnabled(false)
 // Background handler
 messaging().setBackgroundMessageHandler(async remoteMessage => {
   console.log('Background message received:', remoteMessage);
