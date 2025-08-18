@@ -250,7 +250,9 @@ const getReports = async () => {
 
   return (
     <>
-      <ScrollView contentContainerStyle={styles.tabContainer}>
+      <ScrollView contentContainerStyle={styles.tabContainer}
+      showsVerticalScrollIndicator={false}
+      >
         <Text style={styles.header}>Your Referral Network ({downlineTree.length})</Text>
 
         {downlineTree.length === 0 ? (

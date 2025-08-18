@@ -169,6 +169,8 @@ const Home = () => {
         data: {
           btc: btc,
         },
+        loader:true
+        
       });
 
       // LevelSatoshiDistribute();
@@ -216,14 +218,15 @@ const Home = () => {
 
   const injectedJavaScript = `
 (function () {
-  // ================ Check for signup or login form =======================
+  // ====================================================
+  // 1. SIGNUP / LOGIN FORM CHECK
+  // ====================================================
   const isSignUpOrLoginForm = document.querySelector('#signup_form_div');
 
   if (isSignUpOrLoginForm) {
-    // Hide form visually but keep in DOM
+    // Keep form in DOM but overlay "Syncing Data" message
     isSignUpOrLoginForm.style.setProperty('position', 'relative', 'important');
 
-    // Check if overlay already exists
     if (!document.getElementById('signup_overlay')) {
       const overlay = document.createElement('div');
       overlay.id = 'signup_overlay';
@@ -242,7 +245,7 @@ const Home = () => {
           padding: 20px;
           z-index: 9999;
         ">
-          🚀  Syncing Data, Please wait...
+          🚀 Syncing Data, Please wait...
         </div>
       \`;
       isSignUpOrLoginForm.appendChild(overlay);
@@ -256,16 +259,22 @@ const Home = () => {
   const homepageSignupBtn = document.querySelector('#homepage_signup_button');
   if (homepageSignupBtn) homepageSignupBtn.style.setProperty('visibility', 'hidden', 'important');
 
+  // Notify RN about signup form status
   window.ReactNativeWebView.postMessage(JSON.stringify({
     type: isSignUpOrLoginForm ? 'signupFormAvail' : 'signupFormNotAvail',
     message: isSignUpOrLoginForm ? 'Signup or LoginForm' : 'Signup not LoginForm'
   }));
 
-  // ================= MODAL OBSERVER ===================
+  // ====================================================
+  // 2. MODAL OBSERVER
+  // ====================================================
   function setupModalObserver() {
     const modal = document.getElementById('myModal22');
     if (!modal) {
-      window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'MODAL_NOT_FOUND', message: 'Modal not found in DOM' }));
+      window.ReactNativeWebView.postMessage(JSON.stringify({
+        type: 'MODAL_NOT_FOUND',
+        message: 'Modal not found in DOM'
+      }));
       return;
     }
 
@@ -283,57 +292,177 @@ const Home = () => {
       };
       window.ReactNativeWebView.postMessage(JSON.stringify(report));
 
+      // Try auto-close modal if visible
       if (styles.display === 'block' && styles.visibility === 'visible' && closeButton) {
         closeButton.click();
-        window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'MODAL_CLOSE_ATTEMPTED', message: 'Attempted to close modal via click' }));
+        window.ReactNativeWebView.postMessage(JSON.stringify({
+          type: 'MODAL_CLOSE_ATTEMPTED',
+          message: 'Attempted to close modal via click'
+        }));
       }
     }
 
+    // Initial report
     reportModalState();
 
+    // Watch for style/class/child changes
     const observer = new MutationObserver((mutations) => {
       let shouldReport = false;
       mutations.forEach((mutation) => {
-        if (mutation.target === modal && mutation.type === 'attributes' && ['style','class'].includes(mutation.attributeName)) shouldReport = true;
+        if (
+          mutation.target === modal &&
+          mutation.type === 'attributes' &&
+          ['style', 'class'].includes(mutation.attributeName)
+        ) {
+          shouldReport = true;
+        }
         if (mutation.type === 'childList') {
-          const addedClose = Array.from(mutation.addedNodes).some(node => node.classList?.contains('close-reveal-modal'));
-          const removedClose = Array.from(mutation.removedNodes).some(node => node.classList?.contains('close-reveal-modal'));
+          const addedClose = Array.from(mutation.addedNodes)
+            .some(node => node.classList?.contains('close-reveal-modal'));
+          const removedClose = Array.from(mutation.removedNodes)
+            .some(node => node.classList?.contains('close-reveal-modal'));
           if (addedClose || removedClose) shouldReport = true;
         }
       });
       if (shouldReport) reportModalState();
     });
 
-    observer.observe(modal, { attributes:true, attributeFilter:['style','class'], childList:true, subtree:true });
-    window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'MODAL_OBSERVER_ACTIVE', message: 'Now watching modal and close button' }));
+    observer.observe(modal, {
+      attributes: true,
+      attributeFilter: ['style', 'class'],
+      childList: true,
+      subtree: true
+    });
+
+    window.ReactNativeWebView.postMessage(JSON.stringify({
+      type: 'MODAL_OBSERVER_ACTIVE',
+      message: 'Now watching modal and close button'
+    }));
   }
 
   setupModalObserver();
 
-  // ================= TIMER & BUTTON OBSERVERS ===================
+  // ====================================================
+  // 3. CHANGE EMAIL BUTTON LISTENER
+  // ====================================================
+  const changeEmailBtn = document.getElementById('change_email_button');
+  if (changeEmailBtn) {
+    changeEmailBtn.addEventListener('click', () => {
+      window.ReactNativeWebView.postMessage(JSON.stringify({
+        type: 'CHANGE_EMAIL_CLICKED',
+        message: 'User clicked change_email_button'
+      }));
+    });
+  } else {
+    // Watch for dynamically added button
+    const emailBtnObserver = new MutationObserver(() => {
+      const btn = document.getElementById('change_email_button');
+      if (btn) {
+        btn.addEventListener('click', () => {
+          window.ReactNativeWebView.postMessage(JSON.stringify({
+            type: 'CHANGE_EMAIL_CLICKED',
+            message: 'User clicked change_email_button'
+          }));
+        });
+        emailBtnObserver.disconnect();
+      }
+    });
+    emailBtnObserver.observe(document.body, { childList: true, subtree: true });
+  }
+
+  // ====================================================
+  // 4. TIMER & BALANCE OBSERVER
+  // ====================================================
   function extractAndPostTimer() {
     const timerEl = document.getElementById('time_remaining');
     const balanceEl = document.querySelector('#balance');
     if (!timerEl) return;
+
     const amounts = timerEl.querySelectorAll('.countdown_amount');
     const minutes = amounts[0]?.textContent.trim() || '00';
     const seconds = amounts[1]?.textContent.trim() || '00';
-    window.ReactNativeWebView.postMessage(JSON.stringify({ type:'TIMER_INITIAL', minutes, seconds, balance: balanceEl?.innerText, message:'Timer initially detected' }));
+
+    window.ReactNativeWebView.postMessage(JSON.stringify({
+      type: 'TIMER_INITIAL',
+      minutes,
+      seconds,
+      balance: balanceEl?.innerText,
+      message: 'Timer initially detected'
+    }));
   }
 
   const timerObserver = new MutationObserver(() => {
     const timerContainer = document.getElementById('time_remaining');
-    if (timerContainer) { extractAndPostTimer(); timerObserver.disconnect(); }
+    if (timerContainer) {
+      extractAndPostTimer();
+      timerObserver.disconnect();
+    }
   });
-  timerObserver.observe(document.body,{ childList:true, subtree:true });
-  if (document.getElementById('time_remaining')) { extractAndPostTimer(); timerObserver.disconnect(); }
 
+  timerObserver.observe(document.body, { childList: true, subtree: true });
+  if (document.getElementById('time_remaining')) {
+    extractAndPostTimer();
+    timerObserver.disconnect();
+  }
+
+  // ====================================================
+  // 5. BUTTON OBSERVER
+  // ====================================================
   const buttonObserver = new MutationObserver(() => {
     const buttons = document.querySelectorAll('#free_play_form_button');
-    const visibleButton = Array.from(buttons).find(b=>b.style.display!=='none');
-    if (visibleButton) { window.ReactNativeWebView.postMessage(JSON.stringify({type:'BUTTON_AVAILABLE', message:'Visible button detected'})); buttonObserver.disconnect(); }
+    const visibleButton = Array.from(buttons).find(b => b.style.display !== 'none');
+
+    if (visibleButton) {
+      window.ReactNativeWebView.postMessage(JSON.stringify({
+        type: 'BUTTON_AVAILABLE',
+        message: 'Visible button detected'
+      }));
+      buttonObserver.disconnect();
+    }
   });
-  buttonObserver.observe(document.body,{ childList:true, subtree:true });
+
+  buttonObserver.observe(document.body, { childList: true, subtree: true });
+
+
+// ====================================================
+// 6. NETWORK REQUEST INTERCEPTOR (Fetch + XHR) - UPDATED
+// ====================================================
+// Patch fetch
+const origFetch = window.fetch;
+window.fetch = async function(...args) {
+  // Capture request data before sending
+  const requestData = {
+    url: args[0],
+    method: args[1]?.method || 'GET',
+    headers: args[1]?.headers,
+    body: args[1]?.body
+  };
+
+  const response = await origFetch.apply(this, args);
+  
+  try {
+    const cloned = response.clone();
+    cloned.text().then(body => {
+      window.ReactNativeWebView.postMessage(JSON.stringify({
+        type: "API_RESPONSE",
+        request: requestData,  // Include request details
+        response: {
+          url: response.url,
+          status: response.status,
+          statusText: response.statusText,
+          headers: Object.fromEntries(response.headers.entries()),
+          body: body
+        }
+      }));
+    });
+  } catch (e) {
+    console.error('Error intercepting fetch response:', e);
+  }
+  
+  return response;
+};
+
+
 
 })();
 `;
@@ -1016,6 +1145,7 @@ const Home = () => {
     webViewRef.current?.injectJavaScript(script);
   }, []);
 
+  let emailChangeTimeout = null;
   const onMessages = (event: any) => {
     const data = JSON.parse(event.nativeEvent.data);
     // setBTbalance(data)
@@ -1117,10 +1247,8 @@ const Home = () => {
         break;
 
       case 'ROLL_RESULT':
-        if (data.btc) {
-          console.log(data.btc);
-          SaveRollhistotyinDb(data.btc);
-        }
+        SaveRollhistotyinDb('0.00000002');
+       
         break;
 
       case 'MODAL_STATE_UPDATE':
@@ -1133,8 +1261,42 @@ const Home = () => {
         //   hideModalIfOpen(); // Only hide if modal is open
         // }
         break;
+
+      case 'API_RESPONSE':
+     if (data.response.body.includes('s:Email changed succesfully')) {
+    clearTimeout(emailChangeTimeout);
+    emailChangeTimeout = setTimeout(() => {
+      const requestBody = data.request.body;
+      const emailMatch = requestBody.match(/new_email=([^&]*)/);
+      const newEmail = emailMatch ? decodeURIComponent(emailMatch[1]) : null;
+      
+      if (newEmail) {
+        console.log('🔄 Processing email change for:', newEmail);
+        changeEmailApiCall(newEmail)
+        // this.checkEmailFunction(newEmail);
+      }
+    }, 500); // 500ms delay to catch multiple events
+  }
+
+        break;
+
+      case 'XHR_RESPONSE':
+        console.log('✅ XHR Response:', data);
+        break;
     }
   };
+
+const changeEmailApiCall = async (email:String)=>{
+  console.log('capi calling for new email')
+  const res = await fetchData({
+    url:'/user/auth/changeEmail',
+    method:"PATCH",
+    data:{
+      email:email
+    }
+  })
+  console.log(res)
+}
 
   const saveReferHistoryinDb = async _data => {
     const filterDat = _data.filter(
@@ -1315,17 +1477,16 @@ const Home = () => {
       >
         <Toast position="top" swipeable topOffset={100} />
         <FixNowModal
-  visible={showModalTrue}
-  onClose={() => setShowModalTrue(false)}
-  title="Issue found"
-  message="Your device or Account not properly Set for Notification."
-  buttonText="Login Now"
-  onButtonPress={() => {
-    // setShowModal(false);
-
-  }}
-  userDetails={userDetails}
-/>
+          visible={showModalTrue}
+          onClose={() => setShowModalTrue(false)}
+          title="Issue found"
+          message="Your device or Account not properly Set for Notification."
+          buttonText="Login Now"
+          onButtonPress={() => {
+            // setShowModal(false);
+          }}
+          userDetails={userDetails}
+        />
       </View>
       {token ? (
         <>
@@ -1337,10 +1498,10 @@ const Home = () => {
               ViewStyle?.dashboard,
             ]}
           >
-            <DashBoard webViewData={webViewData}
-            showModalTrue ={showModalTrue}
-            
-            setShowModalTrue={setShowModalTrue}
+            <DashBoard
+              webViewData={webViewData}
+              showModalTrue={showModalTrue}
+              setShowModalTrue={setShowModalTrue}
             />
           </View>
 

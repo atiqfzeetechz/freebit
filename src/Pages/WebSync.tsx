@@ -188,6 +188,7 @@ import {convertScientificToDecimal} from '../utils/NumerConvertor';
 import Sync from '../../assets/svg/sync.svg'
 import { wp } from '../helper/hpwp';
 import { webViewRef } from '../utils/globalWebViewRef';
+import { useNavigation } from '@react-navigation/native';
 
 const data = [
 
@@ -210,6 +211,8 @@ const DashboardScreen = () => {
   const [timerInterval, setTimerInterval] = useState<NodeJS.Timeout | null>(null);
   const [lastSyncDisplay, setLastSyncDisplay] = useState('Never synced');
   const [teamsRolls,setTeamRolls]=useState('')
+
+  const navigation = useNavigation()
 
   // const [lastSync,setlastSync]=useState('')
 
@@ -242,7 +245,7 @@ const updateLastSyncDisplay = () => {
 
 const getDownlineRollCount = async ()=>{
   const res = await fetchData({
-    url:"/user/auth/downlinerolls",
+    url:"/user/auth/downlinerolls?timeframe=today",
     method:"GET"
   })
   const response = res.data
@@ -468,13 +471,15 @@ useEffect(() => {
           <Text style={styles.title}>Last Sync </Text>
           <Text style={[styles.value]}>{lastSyncDisplay}</Text>
         </View>
-        <View style={styles.box}>
-          <Text style={styles.title}>Team Rolls</Text>
+        <TouchableOpacity style={styles.box}
+        onPress={()=>navigation.navigate('levelRolls')}
+        >
+          <Text style={styles.title}>Team Rolls (today)</Text>
           <Text style={[styles.value]}>
-            {teamsRolls?.totalCount}
+            {teamsRolls?.totalCount} 👉🏾
             {/* {btBalance?.minutes} : {btBalance?.seconds} */}
           </Text>
-        </View>
+        </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );

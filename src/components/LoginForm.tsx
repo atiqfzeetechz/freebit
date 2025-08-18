@@ -181,7 +181,7 @@ export default function LoginForm(props: any) {
                   },
                   {
                     value: 'signup',
-                    label: 'Sign Up',
+                    label: 'Registeration',
                     style: activeTab === 'signup' ? styles.activeSegment : {},
                   },
                 ]}

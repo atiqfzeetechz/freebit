@@ -48,6 +48,7 @@ export default function Sidebar() {
     },
     { label: 'Withdrawal Report', icon: 'report', route: 'WithdrawalReports' },
     { label: 'Level Reports', icon: 'assessment', route: 'levelreports' },
+    { label: 'Teams Rolls', icon: 'assessment', route: 'levelRolls' },
   ];
 
   const handleItemPress = route => {
