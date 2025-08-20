@@ -166,7 +166,10 @@ const Withdrawal = () => {
                      }
                        
                        onPress={openSidebar} />
-              <Appbar.Content title="Withdrawal" />
+              <Appbar.Content title="Withdrawal" titleStyle={{
+            fontSize: 18,
+            fontWeight: '800',
+          }} />
             </Appbar.Header>
 
             <ScrollView

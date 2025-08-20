@@ -162,7 +162,10 @@ export default function TeamRolls() {
           icon={() => <MenuSvg width={25} height={25} />}
           onPress={openSidebar}
         />
-        <Appbar.Content title="Team Rolls" />
+        <Appbar.Content title="Team Rolls"  titleStyle={{
+            fontSize: 18,
+            fontWeight: '800',
+          }} />
       </Appbar.Header>
 
       {/* Timeframe Filter */}

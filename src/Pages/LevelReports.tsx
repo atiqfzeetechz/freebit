@@ -29,7 +29,10 @@ export default function LevelReports() {
         height={25}
         width={25}
         />} onPress={openSidebar} />
-        <Appbar.Content title="Level Report" />
+        <Appbar.Content title="Level Report" titleStyle={{
+            fontSize: 18,
+            fontWeight: '800',
+          }} />
       </Appbar.Header>
 
       {/* Custom Tab Bar */}

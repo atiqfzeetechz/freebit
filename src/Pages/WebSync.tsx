@@ -181,15 +181,16 @@ import {
 import useAxios from '../hooks/useAxios';
 import {useAuth} from '../hooks/useAuth';
 import {useWebView} from '../context/WebviewContext';
-import {IconButton} from 'react-native-paper';
+import {Appbar, IconButton} from 'react-native-paper';
 import {useLoader} from '../hooks/useLoader';
 import {useData} from '../hooks/useGlobalData';
-import {convertScientificToDecimal} from '../utils/NumerConvertor';
+import {convertScientificToDecimal, formatBTC} from '../utils/NumerConvertor';
 import Sync from '../../assets/svg/sync.svg'
 import { wp } from '../helper/hpwp';
 import { webViewRef } from '../utils/globalWebViewRef';
 import { useNavigation } from '@react-navigation/native';
 import { useGlobalRef } from '../hooks/useGlobalRef';
+import ReloadSvg from '../../assets/svg/colored-refresh.svg';
 import { handleReloadWebView } from '../utils/webViewHelper';
 
 const data = [
@@ -351,15 +352,14 @@ useEffect(() => {
       <StatusBar backgroundColor="#4e91fc" barStyle="light-content" />
 
       {/* Header */}
-      <View style={styles.header}>
+      {/* <View style={styles.header}>
         <View style={[styles.topRow , {
           width:wp(95),
-          // backgroundColor:"green"
         }]}>
           <Text style={styles.headerText}>Sync Details</Text>
           <TouchableOpacity  onPress={syncReCallwebView}
           style={{
-            // backgroundColor:"red",
+          
            marginRight:50
           }}
           >
@@ -371,8 +371,26 @@ useEffect(() => {
           </TouchableOpacity>
         
         </View>
-        {/* <Text style={styles.headerText}>Sync Details</Text> */}
-      </View>
+
+      </View> */}
+       <Appbar.Header>
+              <Appbar.Content title="Sync" titleStyle={{
+            fontSize: 18,
+            fontWeight: '800',
+          }} />
+
+              <Appbar.Action
+                icon={() => (
+                  <TouchableOpacity
+                    onPress={() => {
+                      syncReCallwebView();
+                    }}
+                  >
+                    <ReloadSvg width={25} height={25} />
+                  </TouchableOpacity>
+                )}
+              />
+            </Appbar.Header>
 
       {/* Grid Content */}
       <ScrollView contentContainerStyle={styles.container}>
@@ -408,7 +426,7 @@ useEffect(() => {
         <View style={styles.box}>
           <Text style={styles.title}>Balance (Wallet)</Text>
           <Text style={[styles.value]}>
-            {convertScientificToDecimal(lavelBalance)}
+            {formatBTC  (lavelBalance)}
           </Text>
         </View>
         <View style={styles.box}>

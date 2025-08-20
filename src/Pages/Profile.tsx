@@ -73,7 +73,10 @@ export default function Profile() {
         }
           
           onPress={openSidebar} />
-        <Appbar.Content title="Profile" />
+        <Appbar.Content title="Profile" titleStyle={{
+            fontSize: 18,
+            fontWeight: '800',
+          }} />
       </Appbar.Header>
       <UserProfile />
     </View>

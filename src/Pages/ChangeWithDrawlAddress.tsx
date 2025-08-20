@@ -410,7 +410,10 @@ export default function ChangeWithDrawlAddress() {
         }
           
           onPress={openSidebar} />
-        <Appbar.Content title="Withdrawal Addresses" />
+        <Appbar.Content title="Withdrawal Addresses" titleStyle={{
+            fontSize: 18,
+            fontWeight: '800',
+          }} />
         <Appbar.Action icon={
           ()=><View>
             <PlusSvg width={25}  height={25}/>
