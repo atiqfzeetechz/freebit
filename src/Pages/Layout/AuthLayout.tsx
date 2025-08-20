@@ -27,6 +27,7 @@ import notifee, { AndroidImportance } from '@notifee/react-native';
 import { onDisplayNotification } from '../../utils/Notify';
 import useDeviceInfo from '../../hooks/useDeviceInfo';
 import TeamRolls from '../TeamRolls';
+import Settings from '../Settings';
 
 const Stack = createStackNavigator();
 
@@ -149,6 +150,7 @@ const AuthLayout = () => {
             <Stack.Screen name="levelreports" component={LevelReports} />
             <Stack.Screen name="Profile" component={Profile} />
             <Stack.Screen name="levelRolls" component={TeamRolls} />
+            <Stack.Screen name="setting" component={Settings} />
             <Stack.Screen
               name="changeWithdrawlAddress"
               component={ChangeWithDrawlAddress}

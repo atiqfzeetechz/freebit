@@ -31,7 +31,7 @@ export const AuthContext = createContext<AuthContextType | null>(null);
 interface Props {
   children: ReactNode;
 }
-type User = {
+export type User = {
   emailSubscriptions: {
     paymentNotifications: boolean;
     depositNotifications: boolean;

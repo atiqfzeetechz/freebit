@@ -189,6 +189,8 @@ import Sync from '../../assets/svg/sync.svg'
 import { wp } from '../helper/hpwp';
 import { webViewRef } from '../utils/globalWebViewRef';
 import { useNavigation } from '@react-navigation/native';
+import { useGlobalRef } from '../hooks/useGlobalRef';
+import { handleReloadWebView } from '../utils/webViewHelper';
 
 const data = [
 
@@ -202,6 +204,7 @@ const data = [
 
 const DashboardScreen = () => {
  const {fetchData} = useAxios();
+  const {webViewRef}=useGlobalRef()
   const {stats, setStats, lastSync, setLastSync} = useData();
   const [lavelBalance, setLavelBalance] = useState(0);
   const {setuserDetails, userDetails, btBalance, setBTbalance} = useAuth();
@@ -292,7 +295,7 @@ useEffect(() => {
   }, [SyncWebViewClick]);
 
   function syncReCallwebView() {
-    console.log(webViewRef)
+  handleReloadWebView(webViewRef)
     // showLoader();
     // setSyncWebViewclick(SyncWebViewClick + 1);
     const timestamp = new Date().toISOString(); // or use new Date().toLocaleString()

@@ -13,6 +13,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useSidebar } from '../../context/SidebarContext';
 import { useWebView } from '../../context/WebviewContext';
 import useAxios from '../../hooks/useAxios';
+import SettingSvg from '../../../assets/svg/setting.svg'
 
 const { width } = Dimensions.get('window');
 
@@ -49,6 +50,7 @@ export default function Sidebar() {
     { label: 'Withdrawal Report', icon: 'report', route: 'WithdrawalReports' },
     { label: 'Level Reports', icon: 'assessment', route: 'levelreports' },
     { label: 'Teams Rolls', icon: 'assessment', route: 'levelRolls' },
+    { label: 'Settings', icon: <SettingSvg heigit={25} width={25}/>, route: 'setting' },
   ];
 
   const handleItemPress = route => {
