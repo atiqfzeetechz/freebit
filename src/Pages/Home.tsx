@@ -28,6 +28,7 @@ import FixNowModal from '../helper/FixNowModal';
 import ReloadSvg from '../../assets/svg/colored-refresh.svg';
 import {
   disableLottery,
+  getFunValue,
   getMyRewardPoints,
   getwithdrawalAddress,
   handleReloadWebView,
@@ -65,7 +66,7 @@ const Home = () => {
     setReferalId,
   } = useAuth();
 
-  const { stats, setStats } = useData();
+  const { stats, setStats,funCoinStats,setFunCoinStats } = useData();
  
   const {webViewRef}=useGlobalRef()
   console.log(webViewRef)
@@ -484,6 +485,7 @@ window.fetch = async function(...args) {
         getMyRewardPoints(webViewRef);
         is2FAEnabled(webViewRef);
         getwithdrawalAddress(webViewRef);
+        getFunValue(webViewRef);
         if (userDetails?.isAdmin) {
           referhistory(webViewRef);
         }
@@ -565,6 +567,14 @@ window.fetch = async function(...args) {
 
       case 'ROLL_RESULT':
         SaveRollhistotyinDb('0.00000002');
+
+        break;
+         case 'FUN_STATS':
+       console.log(data)
+        setFunCoinStats({
+          token:data.tokens,
+          valueinBtc:data.btc
+        })
 
         break;
 
@@ -701,8 +711,9 @@ window.fetch = async function(...args) {
             <WebView
               ref={webViewRef}
               source={{ uri: 'https://freebitco.in/' }}
-              // injectedJavaScript={injectedJavaScript}
+              injectedJavaScript={injectedJavaScript}
                 // injectedJavaScriptBeforeContentLoaded={injectedJavaScript}
+                injectedJavaScriptBeforeContentLoaded={injectedJavaScript} // Runs earliest
               onMessage={onMessages}
               onLoadEnd={handleWebViewLoad}
               style={styles.hiddenWebView}

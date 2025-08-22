@@ -161,11 +161,11 @@ export default function Refer() {
         <Card style={styles.card}>
           <Card.Content>
             <View style={styles.profileHeader}>
-              <Avatar.Text
+              {/* <Avatar.Text
                 size={64}
                 label={userDetails?.email?.charAt(0).toUpperCase() || 'U'}
                 style={styles.avatar}
-              />
+              /> */}
               <View style={styles.profileInfo}>
                 <Title style={styles.email}>{userDetails?.email}</Title>
                 <Text style={styles.memberSince}>
@@ -341,16 +341,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 16,
+    justifyContent:"center"
   },
   avatar: {
     backgroundColor: '#6200ee',
     marginRight: 16,
   },
   profileInfo: {
-    flex: 1,
+    // flex: 1,
+    maxWidth:'90%',
+    alignSelf:"center"
   },
   email: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
   },
   memberSince: {

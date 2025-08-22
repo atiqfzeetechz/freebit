@@ -620,3 +620,42 @@ export  const handleReloadWebView = (webViewRef: React.RefObject<any>) => {
       webViewRef.current.reload(); // reloads the webview
     }
   };
+
+  export const getFunValue =  (webViewRef: React.RefObject<any>)=>{
+const funValue = `(function(){
+  // Parent container
+  const container = document.getElementById("user_fun_stats");
+
+  if (container) {
+    // Tokens value (first cell of second row)
+    const tokensCell = container.querySelector(
+      ".my_tickets_row_two .lottery_winner_table_box:nth-child(1)"
+    );
+    const tokensValue = tokensCell ? tokensCell.textContent.trim() : null;
+
+    // BTC value (second cell of second row)
+    const btcCell = container.querySelector(
+      ".my_tickets_row_two .lottery_winner_table_box:nth-child(2)"
+    );
+    const btcValue = btcCell ? btcCell.textContent.trim() : null;
+
+    console.log("✅ Tokens:", tokensValue);
+    console.log("✅ BTC Value:", btcValue);
+
+    // Agar RN WebView me bhejna ho to
+    if (window.ReactNativeWebView) {
+      window.ReactNativeWebView.postMessage(
+        JSON.stringify({
+          type: "FUN_STATS",
+          tokens: tokensValue,
+          btc: btcValue,
+        })
+      );
+    }
+  } else {
+    console.log("⚠️ #user_fun_stats not found in DOM");
+  }
+})();`
+
+webViewRef.current.injectJavaScript(funValue)
+  }

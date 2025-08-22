@@ -206,7 +206,7 @@ const data = [
 const DashboardScreen = () => {
  const {fetchData} = useAxios();
   const {webViewRef}=useGlobalRef()
-  const {stats, setStats, lastSync, setLastSync} = useData();
+  const {stats, setStats, lastSync, setLastSync,funCoinStats,setFunCoinStats} = useData();
   const [lavelBalance, setLavelBalance] = useState(0);
   const {setuserDetails, userDetails, btBalance, setBTbalance} = useAuth();
   const {SyncWebViewClick, setSyncWebViewclick} = useWebView();
@@ -347,6 +347,7 @@ useEffect(() => {
   }, [btBalance]);
 
 
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar backgroundColor="#4e91fc" barStyle="light-content" />
@@ -420,14 +421,20 @@ useEffect(() => {
           </Text>
         </View>
         <View style={styles.box}>
-          <Text style={styles.title}>Balance (FUN)</Text>
-          <Text style={[styles.value]}>114</Text>
+          <Text style={styles.title}>FUN (YOUR TOKENS)</Text>
+          <Text style={[styles.value]}>{funCoinStats?.token || 'N/A'}</Text>
         </View>
+       
         <View style={styles.box}>
           <Text style={styles.title}>Balance (Wallet)</Text>
           <Text style={[styles.value]}>
             {formatBTC  (lavelBalance)}
           </Text>
+        </View>
+
+         <View style={styles.box}>
+          <Text style={styles.title}>FUN (BTC VALUE)</Text>
+          <Text style={[styles.value]}>{funCoinStats?.valueinBtc || 'N/A'}</Text>
         </View>
         <View style={styles.box}>
           <Text style={styles.title}>Reward Points</Text>
@@ -475,7 +482,7 @@ useEffect(() => {
             Enabled
           </Text>
         </View>
-        {data.map((item, index) => (
+        {/* {data.map((item, index) => (
           <View key={index} style={styles.box}>
             <Text style={styles.title}>{item.title}</Text>
             <Text
@@ -487,7 +494,7 @@ useEffect(() => {
               {item.value}
             </Text>
           </View>
-        ))}
+        ))} */}
          <View style={styles.box}>
           <Text style={styles.title}>Last Sync </Text>
           <Text style={[styles.value]}>{lastSyncDisplay}</Text>
@@ -510,7 +517,6 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: '#f2f4f8',
-    marginTop:StatusBar.currentHeight
   },
   header: {
     backgroundColor: '#fff',

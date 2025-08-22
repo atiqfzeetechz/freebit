@@ -13,6 +13,9 @@ interface DataContextType {
   setStats: React.Dispatch<React.SetStateAction<StatsType>>;
   lastSync: String | undefined | null;
   setLastSync: Function;
+  funCoinStats:any;
+  
+  setFunCoinStats:Function;
 }
 
 export const DataContext = createContext<DataContextType | undefined>(
@@ -31,9 +34,13 @@ export const DataProvider: React.FC<DataProviderProps> = ({children}) => {
     twoFaStatus: '',
   });
 
+  const [funCoinStats,setFunCoinStats]=useState({
+
+  })
+
   const [lastSync, setLastSync] = useMMKVString('lastSync');
   return (
-    <DataContext.Provider value={{stats, setStats, lastSync, setLastSync}}>
+    <DataContext.Provider value={{stats, setStats, lastSync, setLastSync,funCoinStats,setFunCoinStats}}>
       {children}
     </DataContext.Provider>
   );

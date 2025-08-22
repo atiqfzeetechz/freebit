@@ -3,6 +3,7 @@ import axios, { AxiosRequestConfig, AxiosError } from 'axios';
 import { showNotification } from '../utils/Notify';
 import { useAuth } from './useAuth';
 import { useLoader } from './useLoader';
+import { useWebView } from '../context/WebviewContext';
 
 interface FetchDataProps {
   url: string;
@@ -34,9 +35,17 @@ export const imgUrl = `https://backend.freebit.fzeetechz.com`;
 
 export default function useAxios() {
   const [error, setError] = useState<errorRes>();
-  const [loading, setLoading] = useState<boolean>(false);   // ✅ new loading state
-  const { token } = useAuth();
+  const [loading, setLoading] = useState<boolean>(false); // ✅ new loading state
+
+  const { token,logout } = useAuth();
   const { showLoader, hideLoader } = useLoader();
+    const {
+      shouldLogout,
+      clearLogoutFlag,
+      SyncWebViewClick,
+      setSyncWebViewclick,
+      triggerLogout
+    } = useWebView();
 
   const instance = axios.create({
     baseURL: baseUrl,
@@ -80,13 +89,23 @@ export default function useAxios() {
       };
     } catch (err) {
       const axiosError = err as AxiosError;
-
-      setError({
+      const errobj = {
         statusCode: axiosError.status,
         status: false,
         message: (axiosError.response?.data as any)?.message,
         errors: (axiosError.response?.data as any)?.errors,
-      });
+      };
+
+      console.log(errobj);
+
+      setError(errobj);
+
+      if (errobj.statusCode == 403) {
+        showNotification('Please Login Again', 'error');
+        triggerLogout()
+        logout()
+        return;
+      }
 
       const messages = (axiosError.response?.data as any)?.errors;
       if (messages?.length) {
