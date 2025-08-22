@@ -10,9 +10,9 @@ import { storage } from './src/utils/storage';
 messaging().setBackgroundMessageHandler(async remoteMessage => {
   console.log('Background message received:', remoteMessage);
 
-  const { title, body } = remoteMessage.data;  // ✅ FCM se bheja hua data use kar rahe
+  const { title, body } = remoteMessage.data || {};
 
-  // Create channels
+  // Get user preference
   const prefString = storage.getString('notification');
   let pref = null;
   if (prefString) {
@@ -21,7 +21,7 @@ messaging().setBackgroundMessageHandler(async remoteMessage => {
 
   const now = new Date();
 
-  let playSound = true; // default: play sound if nothing found
+  let playSound = true; // default true
 
   if (pref) {
     if (!pref.enabled) {
@@ -29,7 +29,6 @@ messaging().setBackgroundMessageHandler(async remoteMessage => {
     } else {
       const start = new Date(pref.startTime);
       const end = new Date(pref.endTime);
-
       if (now >= start && now <= end) {
         playSound = true;
       } else {
@@ -38,44 +37,59 @@ messaging().setBackgroundMessageHandler(async remoteMessage => {
     }
   }
 
-  let channelId = null
+  let channelId = null;
+
   if (playSound) {
+    // 🔊 Sound + Vibration channel
     channelId = await notifee.createChannel({
       id: 'default_channel11',
       name: 'Default Channel',
       vibration: true,
       vibrationPattern: [300, 500],
-      sound: 'server_down_alert', // file: android/app/src/main/res/raw
+      sound: 'server_down_alert', // put file in android/app/src/main/res/raw
       importance: AndroidImportance.HIGH,
     });
+
+    await notifee.displayNotification({
+      title: title || 'Default Title',
+      body: body || 'Default Body',
+      android: {
+        channelId,
+        sound: 'server_down_alert',
+        vibrationPattern: [300, 500],
+        smallIcon: 'ic_notification',
+        largeIcon: 'ic_notification',
+        pressAction: {
+          id: 'default',
+        },
+      },
+    });
+
   } else {
+    // 🤫 Silent channel (No sound, No vibration)
     channelId = await notifee.createChannel({
-      id: 'silent',
+      id: 'silent_Channel',
       name: 'Silent Notifications',
-      sound: undefined, // ✅ koi sound nahi (silent)
+      sound: undefined,
+      vibration: false,
       importance: AndroidImportance.HIGH,
+    });
+
+    await notifee.displayNotification({
+      title: title || 'Default Title',
+      body: body || 'Default Body',
+      android: {
+        channelId,
+        sound: undefined,   // ✅ no sound
+        vibration: false,   // ✅ no vibration
+        smallIcon: 'ic_notification',
+        largeIcon: 'ic_notification',
+        pressAction: {
+          id: 'default',
+        },
+      },
     });
   }
-
-
-
-console.log(channelId)
-  // Show notification
-  await notifee.displayNotification({
-    title: title || 'Default Title',  // ✅ agar empty ho to fallback
-    body: body || 'Default Body',
-    android: {
-      channelId,
-      vibrationPattern: [300, 500],
-      sound: 'server_down_alert',
-      smallIcon: 'ic_notification',
-      largeIcon: 'ic_notification',
-      pressAction: {
-        id: 'default',
-      },
-    },
-  });
 });
-
 
 AppRegistry.registerComponent(appName, () => App);
