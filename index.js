@@ -1,27 +1,27 @@
-// index.js or your entry point
+// index.js or entry point
 import { AppRegistry } from 'react-native';
 import App from './App';
 import { name as appName } from './app.json';
 import messaging from '@react-native-firebase/messaging';
-import notifee, { AndroidImportance } from '@notifee/react-native';
+import notifee, {
+  AndroidImportance,
+  AndroidCategory,
+  AndroidColor,
+} from '@notifee/react-native';
 import { storage } from './src/utils/storage';
 
-// Background handler
+// ✅ Handle background notification
 messaging().setBackgroundMessageHandler(async remoteMessage => {
-  console.log('Background message received:', remoteMessage);
+  console.log('📩 Background message received:', remoteMessage);
 
-  const { title, body } = remoteMessage.data;  // ✅ FCM se bheja hua data use kar rahe
+  const { title, body } = remoteMessage.data;
 
-  // Create channels
+  // 🔔 User preference check (mute/silent logic)
   const prefString = storage.getString('notification');
-  let pref = null;
-  if (prefString) {
-    pref = JSON.parse(prefString);
-  }
+  let pref = prefString ? JSON.parse(prefString) : null;
 
   const now = new Date();
-
-  let playSound = true; // default: play sound if nothing found
+  let playSound = true;
 
   if (pref) {
     if (!pref.enabled) {
@@ -29,53 +29,75 @@ messaging().setBackgroundMessageHandler(async remoteMessage => {
     } else {
       const start = new Date(pref.startTime);
       const end = new Date(pref.endTime);
-
-      if (now >= start && now <= end) {
-        playSound = true;
-      } else {
-        playSound = false;
-      }
+      playSound = now >= start && now <= end;
     }
   }
 
-  let channelId = null
+  // 📢 Create proper channel
+  let channelId = null;
   if (playSound) {
     channelId = await notifee.createChannel({
-      id: 'default_channel11',
-      name: 'Default Channel',
+      id: 'incoming_call',
+      name: 'Incoming Call Alerts',
       vibration: true,
-      vibrationPattern: [300, 500],
-      sound: 'server_down_alert', // file: android/app/src/main/res/raw
+      vibrationPattern: [300, 500, 700, 500],
+      sound: 'server_down_alert', // raw folder me ringtone daalo
       importance: AndroidImportance.HIGH,
     });
   } else {
     channelId = await notifee.createChannel({
-      id: 'silent',
-      name: 'Silent Notifications',
-      sound: undefined, // ✅ koi sound nahi (silent)
+      id: 'silent_call',
+      name: 'Silent Call Alerts',
+      sound: undefined,
       importance: AndroidImportance.HIGH,
     });
   }
 
+  console.log('📢 Using Channel:', channelId);
 
+  // 📞 Show Incoming Call UI
+ await notifee.displayNotification({
+  title: title || '📞 Incoming Call',
+  body: body || 'Someone is calling you…',
+  android: {
+    channelId,
+    vibrationPattern: [300, 500],
+    sound: playSound ? 'server_down_alert' : undefined,
+    smallIcon: 'ic_notification',
+    largeIcon: 'ic_notification',
 
-console.log(channelId)
-  // Show notification
-  await notifee.displayNotification({
-    title: title || 'Default Title',  // ✅ agar empty ho to fallback
-    body: body || 'Default Body',
-    android: {
-      channelId,
-      vibrationPattern: [300, 500],
-      sound: 'server_down_alert',
-      smallIcon: 'ic_notification',
-      largeIcon: 'ic_notification',
-      pressAction: {
-        id: 'default',
-      },
+    // ✅ Call category
+    category: AndroidCategory.CALL,
+
+    // ✅ Full screen intent
+    fullScreenAction: {
+      id: 'default',
     },
-  });
+
+    // ✅ Persistent + timeout 40s
+    ongoing: true,          // Stick on top (like WhatsApp incoming call)
+    autoCancel: false,      // User tap se dismiss nahi hoga
+    timeoutAfter: 40000,    // 40 sec tak dikhte rahega
+
+    // ✅ Buttons (actions)
+    actions: [
+      {
+        title: '📞 Answer',
+        pressAction: { id: 'answer' },
+      },
+      {
+        title: '❌ Decline',
+        pressAction: { id: 'decline' },
+      },
+    ],
+
+    // ✅ Press action (body click)
+    pressAction: {
+      id: 'default',
+    },
+  },
 });
 
+});
 
 AppRegistry.registerComponent(appName, () => App);
