@@ -16,11 +16,13 @@ import { hp } from '../helper/hpwp';
 import { showNotification } from '../utils/Notify';
 import { useWebView } from '../context/WebviewContext';
 import { useLastSyncDisplay } from '../hooks/useLastSync';
+import useApiCall from '../hooks/useApiCall';
 
 export default function DashBoard({ webViewData,showModalTrue, setShowModalTrue }: any) {
   const { fetchData } = useAxios();
   const { setuserDetails, userDetails } = useAuth();
   const { triggerLogout } = useWebView();
+  const {saveNotificationToMMKV}= useApiCall()
   const theme = useTheme();
   // const lastSync = useLastSyncDisplay();
   const [lastRollTime, setLastRollTime] = useState(
@@ -63,6 +65,7 @@ export default function DashBoard({ webViewData,showModalTrue, setShowModalTrue 
 
   useEffect(() => {
     getMe();
+    saveNotificationToMMKV()
     return () => {
       if (timerInterval) clearInterval(timerInterval);
     };
