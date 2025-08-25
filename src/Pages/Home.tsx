@@ -66,10 +66,10 @@ const Home = () => {
     setReferalId,
   } = useAuth();
 
-  const { stats, setStats,funCoinStats,setFunCoinStats } = useData();
- 
-  const {webViewRef}=useGlobalRef()
-  console.log(webViewRef)
+  const { stats, setStats, funCoinStats, setFunCoinStats } = useData();
+
+  const { webViewRef } = useGlobalRef();
+  console.log(webViewRef);
   const { fetchData } = useAxios();
   const {
     shouldLogout,
@@ -137,14 +137,22 @@ const Home = () => {
     isAdminCheck();
   }, []);
 
-  const SaveRollhistotyinDb = async (btc: any) => {
+  const SaveRollhistotyinDb = async (btc: any, time: any) => {
+    console.log(time);
+    let payload = {};
+
+    if (time) {
+      (payload.minutes = time.minutes),
+        (payload.seconds = time.seconds),
+        (payload.btc = btc);
+    }
+    console.log(payload);
+    // return
     try {
       const res = await fetchData({
         url: `/user/roll/new`,
         method: 'POST',
-        data: {
-          btc: btc,
-        },
+        data: payload,
         loader: true,
       });
 
@@ -210,7 +218,6 @@ const Home = () => {
       console.log(error);
     }
   };
-
 
   const injectedJavaScript = `
   (function () {
@@ -414,7 +421,10 @@ const Home = () => {
         message: 'Visible button detected'
       }));
       buttonObserver.disconnect();
-    }
+    }else{
+      
+      
+      }
   });
 
   buttonObserver.observe(document.body, { childList: true, subtree: true });
@@ -464,6 +474,8 @@ window.fetch = async function(...args) {
 `;
 
   let emailChangeTimeout = null;
+  let debounceTimer: NodeJS.Timeout;
+  let lastRollTime: string | null = null;
   const onMessages = (event: any) => {
     const data = JSON.parse(event.nativeEvent.data);
     // setBTbalance(data)
@@ -557,10 +569,19 @@ window.fetch = async function(...args) {
         rollwithButton(webViewRef);
         break;
 
-      case 'TIMER_INITIAL':
-        console.log(data);
-        setBTbalance(data);
-        break;
+     case 'TIMER_INITIAL':
+  setBTbalance(data);
+
+  const minutes = parseInt(data.minutes, 10);
+  const seconds = parseInt(data.seconds, 10);
+  const currentTimeKey = `${minutes}:${seconds}`;
+
+  if ((minutes > 1 || (minutes === 1 && seconds > 0)) && currentTimeKey !== lastRollTime) {
+    lastRollTime = currentTimeKey;
+    myFunction(data);
+  }
+  break;
+
       case 'REFERRAL_ERROR':
         console.log(data);
         break;
@@ -569,12 +590,12 @@ window.fetch = async function(...args) {
         SaveRollhistotyinDb('0.00000002');
 
         break;
-         case 'FUN_STATS':
-       console.log(data)
+      case 'FUN_STATS':
+        console.log(data);
         setFunCoinStats({
-          token:data.tokens,
-          valueinBtc:data.btc
-        })
+          token: data.tokens,
+          valueinBtc: data.btc,
+        });
 
         break;
 
@@ -583,8 +604,8 @@ window.fetch = async function(...args) {
 
         break;
 
-       case 'API_RESPONSE':
-        console.log(data)
+      case 'API_RESPONSE':
+        console.log(data);
         if (data.response.body.includes('s:Email changed succesfully')) {
           clearTimeout(emailChangeTimeout);
           emailChangeTimeout = setTimeout(() => {
@@ -610,6 +631,10 @@ window.fetch = async function(...args) {
     }
   };
 
+  const myFunction = (time: any) => {
+    console.log('called my function', time);
+    SaveRollhistotyinDb('0.00000002', time);
+  };
   const changeEmailApiCall = async (email: String) => {
     console.log('capi calling for new email');
     const res = await fetchData({
@@ -644,8 +669,6 @@ window.fetch = async function(...args) {
   const [hideOverlay, sethideOverlay] = useState(false);
 
   const [showModalTrue, setShowModalTrue] = useState(false);
-
-
 
   return (
     <>
@@ -686,10 +709,13 @@ window.fetch = async function(...args) {
 
           <View style={[styles.hiddenWebViewContainer, ViewStyle?.webView]}>
             <Appbar.Header>
-              <Appbar.Content title="Home" titleStyle={{
-            fontSize: 18,
-            fontWeight: '800',
-          }} />
+              <Appbar.Content
+                title="Home"
+                titleStyle={{
+                  fontSize: 18,
+                  fontWeight: '800',
+                }}
+              />
 
               <Appbar.Action
                 icon={() => (
@@ -712,8 +738,8 @@ window.fetch = async function(...args) {
               ref={webViewRef}
               source={{ uri: 'https://freebitco.in/' }}
               injectedJavaScript={injectedJavaScript}
-                // injectedJavaScriptBeforeContentLoaded={injectedJavaScript}
-                injectedJavaScriptBeforeContentLoaded={injectedJavaScript} // Runs earliest
+              // injectedJavaScriptBeforeContentLoaded={injectedJavaScript}
+              injectedJavaScriptBeforeContentLoaded={injectedJavaScript} // Runs earliest
               onMessage={onMessages}
               onLoadEnd={handleWebViewLoad}
               style={styles.hiddenWebView}

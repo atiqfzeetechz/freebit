@@ -14,28 +14,34 @@ messaging().setBackgroundMessageHandler(async remoteMessage => {
 
   // Get user preference
   const prefString = storage.getString('notification');
-  let pref = null;
-  if (prefString) {
-    pref = JSON.parse(prefString);
-  }
+let pref = null;
+if (prefString) {
+  pref = JSON.parse(prefString);
+}
 
-  const now = new Date();
+const now = new Date();
 
-  let playSound = true; // default true
+let playSound = true; // default true
 
-  if (pref) {
-    if (!pref.enabled) {
-      playSound = false;
+if (pref) {
+  if (!pref.enabled) {
+    playSound = false;
+  } else {
+    const start = new Date(pref.startTime);
+    const end = new Date(pref.endTime);
+
+    // ✅ Convert everything to "minutes since midnight"
+    const nowMinutes = now.getHours() * 60 + now.getMinutes();
+    const startMinutes = start.getHours() * 60 + start.getMinutes();
+    const endMinutes = end.getHours() * 60 + end.getMinutes();
+
+    if (nowMinutes >= startMinutes && nowMinutes <= endMinutes) {
+      playSound = true;
     } else {
-      const start = new Date(pref.startTime);
-      const end = new Date(pref.endTime);
-      if (now >= start && now <= end) {
-        playSound = true;
-      } else {
-        playSound = false;
-      }
+      playSound = false;
     }
   }
+}
 
   let channelId = null;
 

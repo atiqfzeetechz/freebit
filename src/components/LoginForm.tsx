@@ -95,7 +95,11 @@ export default function LoginForm(props: any) {
     const isValidEmail = validateEmail(email);
     if (!isValidEmail) return;
     console.log({ password });
-    if (!ValidatePassword(password)) return;
+    if(activeTab === 'signup'){
+      
+      if (!ValidatePassword(password)) return;
+    }
+    
     if (activeTab === 'login') {
       let payload = {
         email: email,
