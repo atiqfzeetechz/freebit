@@ -23,13 +23,17 @@ import { useNavigationState, useRoute } from '@react-navigation/native';
 import messaging from '@react-native-firebase/messaging';
 import WebviewLayout from './WebviewLayout';
 
-import notifee, { AndroidImportance } from '@notifee/react-native';
+import notifee, { AndroidImportance, EventType } from '@notifee/react-native';
 import { onDisplayNotification } from '../../utils/Notify';
 import useDeviceInfo from '../../hooks/useDeviceInfo';
 import TeamRolls from '../TeamRolls';
 import Settings from '../Settings';
+import { useGlobalRef } from '../../hooks/useGlobalRef';
 
 const Stack = createStackNavigator();
+
+
+
 
 const LoginFo = () => {
   const route = useRoute();
@@ -54,7 +58,15 @@ const LoginFo = () => {
 const AuthLayout = () => {
   const { isLoggedIn, setReferalId, FcmToken, setFcmToken } = useAuth();
   const { fetchData } = useAxios();
+ const { webViewRef } = useGlobalRef();
 
+  notifee.onBackgroundEvent(async ({ type, detail }) => {
+  if (type === EventType.PRESS) {
+    console.log('👉 Notification pressed in BACKGROUND', detail.notification);
+    webViewRef.current?.reload()
+    // yahan tum state update ya WebView refresh trigger kar sakte ho
+  }
+});
 
   // ✅ Safe notification permission request using InteractionManager
   const requestPermission = async (): Promise<void> => {
@@ -100,6 +112,29 @@ const AuthLayout = () => {
   useEffect(() => {
     getReferalId();
   }, []);
+
+
+// --------------------------notification-------------------------------------------------------------------
+
+//  useEffect(() => {
+//     return notifee.onForegroundEvent(({ type }) => {
+//       if (type === EventType.PRESS) {
+//         console.log("Notification pressed, fresh WebView instance...");
+       
+//       }
+//     });
+//   }, []);
+
+//     // 🔹 Killed state clicks
+//   useEffect(() => {
+//     async function checkInitialNotification() {
+//       const initialNotification = await notifee.getInitialNotification();
+//       if (initialNotification) {
+//         console.log('👉 App opened from killed state by notification:', initialNotification.notification);
+//       }
+//     }
+//     checkInitialNotification();
+//   }, []);
 
   useEffect(() => {
 

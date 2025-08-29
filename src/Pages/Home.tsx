@@ -137,7 +137,7 @@ const Home = () => {
     isAdminCheck();
   }, []);
 
-  const SaveRollhistotyinDb = async (btc: any, time: any) => {
+  const SaveRollhistotyinDb = async (btc: any, time?: any) => {
     console.log(time);
     let payload = {};
 
@@ -145,6 +145,8 @@ const Home = () => {
       (payload.minutes = time.minutes),
         (payload.seconds = time.seconds),
         (payload.btc = btc);
+    }else{
+      payload.btc=btc
     }
     console.log(payload);
     // return
