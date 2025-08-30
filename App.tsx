@@ -14,6 +14,7 @@ import { useEffect } from 'react';
 import { GlobalRefProvider } from './src/context/RefContext';
 
 export default function App() {
+  
   return (
     <GlobalRefProvider>
       <DataProvider>

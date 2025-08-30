@@ -589,7 +589,10 @@ window.fetch = async function(...args) {
         break;
 
       case 'ROLL_RESULT':
-        SaveRollhistotyinDb('0.00000002');
+        console.log(data);
+        if (data?.btc !== '') {
+          SaveRollhistotyinDb('0.00000002');
+        }
 
         break;
       case 'FUN_STATS':
