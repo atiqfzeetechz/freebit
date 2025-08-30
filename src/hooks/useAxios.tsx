@@ -29,7 +29,7 @@ interface errorRes<T = any> {
   }[];
 }
 
-export const baseUrl = `https://backend.freebit.fzeetechz.com/api/v1`;rrrrr
+export const baseUrl = `https://backend.freebit.fzeetechz.com/api/v1`;
 // export const baseUrl = `http://192.168.1.46:5013/api/v1`;
 export const imgUrl = `https://backend.freebit.fzeetechz.com`;
 
